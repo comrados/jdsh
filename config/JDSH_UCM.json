@@ -3,9 +3,9 @@
     "beta"  : 0.1,
     "lamb"  : 0.4,
     "mu" : 1.4,
-    "INTRA" : 0.1,
-    "LR_IMG" : 0.01,
-    "LR_TXT" : 0.01,
+    "INTRA" : 1,
+    "LR_IMG" : 0.1,
+    "LR_TXT" : 0.1,
     "MIN" : -0.52,
     "MAX" : 0.68,
     "ALPHA" : 2,
@@ -23,6 +23,7 @@
     "SEED": 42,
     "QUERY_SIZE": 2000,
     "TRAIN_SIZE": 5000,
+    "LABEL_DIM": 21,
 
     "HASH_BIT" : 128,
     "BATCH_SIZE" : 128,
@@ -30,9 +31,9 @@
     "WEIGHT_DECAY" : 5e-4,
     "GPU_ID" : 0,
     "NUM_WORKERS" : 8,
-    "EPOCH_INTERVAL" : 2,
-    "NUM_EPOCH" : 300,
-    "EVAL_INTERVAL" : 40,
+    "EPOCH_INTERVAL" : 1,
+    "NUM_EPOCH" : 100,
+    "EVAL_INTERVAL" : 1,
     "MODEL_DIR" : "./checkpoints",
     "CHECKPOINT" : "UCM.pth"
 }

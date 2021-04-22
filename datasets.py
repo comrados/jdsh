@@ -32,7 +32,12 @@ if config.DATASET == "UCM":
     indexDatabase = indices[config.QUERY_SIZE:]
     indexTrain = indices[:config.TRAIN_SIZE]
 
+    indexTest_img = [i // 5 for i in indexTest]
+    indexDatabase_img = [i // 5 for i in indexDatabase]
+    indexTrain_img = [i // 5 for i in indexTrain]
+
     txt_feat_len = txt_set.shape[1]
+    img_feat_len = img_set.shape[1]
 
 
     class UCM(torch.utils.data.Dataset):
@@ -40,10 +45,13 @@ if config.DATASET == "UCM":
 
             if train:
                 self.element_indices = indexTrain
+                self.train_labels = label_set[indexTrain_img]
             elif database:
                 self.element_indices = indexDatabase
+                self.train_labels = label_set[indexDatabase_img]
             else:
                 self.element_indices = indexTest
+                self.train_labels = label_set[indexTest_img]
 
         def __getitem__(self, index):
             real_data_index = self.element_indices[index]

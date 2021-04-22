@@ -2,8 +2,8 @@ from JDSH import JDSH
 from utils import logger
 from args import config
 
-def log_info(logger, config):
 
+def log_info(logger, config):
     logger.info('--- Configs List---')
     logger.info('--- Dadaset:{}'.format(config.DATASET))
     logger.info('--- Train:{}'.format(config.TRAIN))
@@ -18,14 +18,13 @@ def log_info(logger, config):
 
 
 def main():
-
     # log
     log = logger()
     log_info(log, config)
 
     Model = JDSH(log, config)
 
-    if config.TRAIN == False:
+    if not config.TRAIN:
         Model.load_checkpoints(config.CHECKPOINT)
         Model.eval()
 
@@ -37,7 +36,7 @@ def main():
             # save the model
             if epoch + 1 == config.NUM_EPOCH:
                 Model.save_checkpoints()
-
+                Model.training_coplete()
 
 
 if __name__ == '__main__':

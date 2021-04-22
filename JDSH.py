@@ -4,12 +4,14 @@ import torch.nn.functional as F
 import datasets
 import os.path as osp
 from torch.autograd import Variable
-from models import ImgNet, TxtNet
-from utils import compress, calculate_top_map, logger
+from models import ImgNet, TxtNet, ImgNetRS, TxtNetRS
+from utils import compress, calculate_top_map, logger, calc_map_k
+import time
 
 
 class JDSH:
     def __init__(self, log, config):
+        self.since = time.time()
         self.logger = log
         self.config = config
 
@@ -50,13 +52,16 @@ class JDSH:
                                                            shuffle=False,
                                                            num_workers=self.config.NUM_WORKERS)
 
-        # TODO adapt code starting from here
+        if self.config.DATASET == "UCM":
+            txt_feat_len = datasets.txt_feat_len
+            img_feat_len = datasets.img_feat_len
 
-        self.ImgNet = ImgNet(code_len=self.config.HASH_BIT)
-
-        txt_feat_len = datasets.txt_feat_len
-
-        self.TxtNet = TxtNet(code_len=self.config.HASH_BIT, txt_feat_len=txt_feat_len)
+            self.ImgNet = ImgNetRS(self.config.HASH_BIT, img_feat_len, 512)
+            self.TxtNet = TxtNetRS(self.config.HASH_BIT, txt_feat_len, 512)
+        else:
+            txt_feat_len = datasets.txt_feat_len
+            self.ImgNet = ImgNet(code_len=self.config.HASH_BIT)
+            self.TxtNet = TxtNet(code_len=self.config.HASH_BIT, txt_feat_len=txt_feat_len)
 
         self.opt_I = torch.optim.SGD(self.ImgNet.parameters(), lr=self.config.LR_IMG, momentum=self.config.MOMENTUM,
                                      weight_decay=self.config.WEIGHT_DECAY)
@@ -65,6 +70,8 @@ class JDSH:
 
         self.best_it = 0
         self.best_ti = 0
+        self.best_ii = 0
+        self.best_tt = 0
 
     def train(self, epoch):
 
@@ -99,28 +106,36 @@ class JDSH:
                                  % (epoch + 1, self.config.NUM_EPOCH, idx + 1, len(self.train_dataset) // self.config.BATCH_SIZE,
                                      loss.item()))
 
-
     def eval(self):
 
-        self.logger.info('--------------------Evaluation: mAP@50-------------------')
+        # self.logger.info('--------------------Evaluation: mAP@50-------------------')
 
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
         re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = compress(self.database_loader, self.test_loader, self.ImgNet,
-                                                          self.TxtNet, self.database_dataset, self.test_dataset)
+                                                          self.TxtNet, self.database_dataset, self.test_dataset,
+                                                          self.config.LABEL_DIM)
 
-        MAP_I2T = calculate_top_map(qu_B=qu_BI, re_B=re_BT, qu_L=qu_L, re_L=re_L, topk=50)
-        MAP_T2I = calculate_top_map(qu_B=qu_BT, re_B=re_BI, qu_L=qu_L, re_L=re_L, topk=50)
+        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L)
+        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L)
 
-        if (self.best_it + self.best_ti) < (MAP_I2T + MAP_T2I):
+        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_L, re_L)
+        MAP_T2T = calc_map_k(qu_BT, re_BI, qu_L, re_L)
+
+        MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
+
+        if (self.best_it + self.best_ti + self.best_ii + self.best_tt) < (MAP_I2T + MAP_T2I + MAP_I2I + MAP_T2T):
             self.best_it = MAP_I2T
             self.best_ti = MAP_T2I
+            self.best_ii = MAP_I2I
+            self.best_tt = MAP_T2T
 
-        self.logger.info('mAP@50 I->T: %.3f, mAP@50 T->I: %.3f' % (MAP_I2T, MAP_T2I))
-        self.logger.info('Best MAP of I->T: %.3f, Best mAP of T->I: %.3f' % (self.best_it, self.best_ti))
-        self.logger.info('--------------------------------------------------------------------')
+            self.save_checkpoints('best.pth')
 
+        self.logger.info('mAP I->T: %.3f, mAP T->I: %.3f, mAP I->I: %.3f, mAP T->T: %.3f' % MAPS)
+        # self.logger.info('Best MAP of I->T: %.3f, Best mAP of T->I: %.3f' % (self.best_it, self.best_ti))
+        # self.logger.info('--------------------------------------------------------------------')
 
     def cal_similarity_matrix(self, F_I, txt):
 
@@ -176,8 +191,7 @@ class JDSH:
             'TxtNet': self.TxtNet.state_dict(),
         }
         torch.save(obj, ckp_path)
-        self.logger.info('**********Save the trained model successfully.**********')
-
+        self.logger.info('**********Save the trained model successfully: ' + file_name + ' **********')
 
     def load_checkpoints(self, file_name='latest.pth'):
         ckp_path = osp.join(self.config.MODEL_DIR, file_name)
@@ -190,6 +204,14 @@ class JDSH:
 
             self.ImgNet.load_state_dict(obj['ImgNet'])
             self.TxtNet.load_state_dict(obj['TxtNet'])
+
+    def training_coplete(self):
+        MAPS = (self.best_it, self.best_ti, self.best_ii, self.best_tt)
+        current = time.time()
+        delta = current - self.since
+        self.logger.info('Training complete in {:.0f}m {:.0f}s'.format(delta // 60, delta % 60))
+        self.logger.info('Best mAPs: (I->T: %.3f, T->I: %.3f, I->I: %.3f, T->T: %.3f)' % MAPS)
+
 
 
 
