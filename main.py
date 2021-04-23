@@ -1,28 +1,17 @@
 from JDSH import JDSH
+from DJSRH import DJSRH
 from utils import logger
 from args import config
-
-
-def log_info(logger, config):
-    logger.info('--- Configs List---')
-    logger.info('--- Dadaset:{}'.format(config.DATASET))
-    logger.info('--- Train:{}'.format(config.TRAIN))
-    logger.info('--- Bit:{}'.format(config.HASH_BIT))
-    logger.info('--- Alpha:{}'.format(config.alpha))
-    logger.info('--- Beta:{}'.format(config.beta))
-    logger.info('--- Lambda:{}'.format(config.lamb))
-    logger.info('--- Mu:{}'.format(config.mu))
-    logger.info('--- Batch:{}'.format(config.BATCH_SIZE))
-    logger.info('--- Lr_IMG:{}'.format(config.LR_IMG))
-    logger.info('--- Lr_TXT:{}'.format(config.LR_TXT))
 
 
 def main():
     # log
     log = logger()
-    log_info(log, config)
 
-    Model = JDSH(log, config)
+    if config.MODEL == "DJSRH":
+        Model = DJSRH(log, config)
+    else:
+        Model = JDSH(log, config)
 
     if not config.TRAIN:
         Model.load_checkpoints(config.CHECKPOINT)
