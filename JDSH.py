@@ -14,6 +14,7 @@ class JDSH:
         self.since = time.time()
         self.logger = log
         self.config = config
+        self.epoch_loss = 0.
 
         torch.manual_seed(1)
         torch.cuda.manual_seed_all(1)
@@ -75,6 +76,8 @@ class JDSH:
 
     def train(self, epoch):
 
+        self.epoch_loss = 0.
+
         self.ImgNet.cuda().train()
         self.TxtNet.cuda().train()
 
@@ -96,15 +99,18 @@ class JDSH:
 
             loss = self.cal_loss(code_I, code_T, S)
 
+            self.epoch_loss += loss.detach().cpu().numpy()
+
             loss.backward()
 
             self.opt_I.step()
             self.opt_T.step()
 
             if (idx + 1) % (len(self.train_dataset) // self.config.BATCH_SIZE / self.config.EPOCH_INTERVAL) == 0:
-                self.logger.info('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f'
-                                 % (epoch + 1, self.config.NUM_EPOCH, idx + 1, len(self.train_dataset) // self.config.BATCH_SIZE,
-                                     loss.item()))
+                # self.logger.info('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f' % (epoch + 1, self.config.NUM_EPOCH, idx + 1, len(self.train_dataset) // self.config.BATCH_SIZE, loss.item()))
+                pass
+
+        self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.config.NUM_EPOCH, self.epoch_loss))
 
     def eval(self):
 

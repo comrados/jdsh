@@ -66,9 +66,10 @@ class ImgNetRS(nn.Module):
         self.alpha = 1.0
 
     def forward(self, x):
-        feat = x
+        x = F.normalize(x, dim=1)
+        feat = F.normalize(x, dim=1)
         hid = self.hash_net(feat)
-        feat = F.normalize(feat, dim=1)
+
         code = torch.tanh(self.alpha * hid)
 
         return feat, hid, code
@@ -94,6 +95,7 @@ class TxtNetRS(nn.Module):
         self.alpha = 1.0
 
     def forward(self, x):
+        x = F.normalize(x, dim=1)
         hid = self.hash_net(x)
         code = torch.tanh(self.alpha * hid)
         return code
