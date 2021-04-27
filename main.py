@@ -1,31 +1,30 @@
 from JDSH import JDSH
 from DJSRH import DJSRH
 from utils import logger
-from args import config
+from args import cfg
 
 
 def main():
     # log
     log = logger()
 
-    if config.MODEL == "DJSRH":
-        Model = DJSRH(log, config)
+    if cfg.MODEL == "DJSRH":
+        model = DJSRH(log, cfg)
     else:
-        Model = JDSH(log, config)
+        model = JDSH(log, cfg)
 
-    if not config.TRAIN:
-        Model.load_checkpoints(config.CHECKPOINT)
-        Model.eval()
-
+    if cfg.TEST:
+        model.load_checkpoints('best.pth')
+        model.test()
     else:
-        for epoch in range(config.NUM_EPOCH):
-            Model.train(epoch)
-            if (epoch + 1) % config.EVAL_INTERVAL == 0:
-                Model.eval()
+        for epoch in range(cfg.NUM_EPOCH):
+            model.train(epoch)
+            if (epoch + 1) % cfg.EVAL_INTERVAL == 0:
+                model.eval()
             # save the model
-            if epoch + 1 == config.NUM_EPOCH:
-                Model.save_checkpoints()
-                Model.training_coplete()
+            if epoch + 1 == cfg.NUM_EPOCH:
+                model.save_checkpoints()
+                model.training_coplete()
 
 
 if __name__ == '__main__':

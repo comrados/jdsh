@@ -23,7 +23,7 @@
   "NUM_WORKERS": 8,
   "EPOCH_INTERVAL": 1,
   "NUM_EPOCH": 100,
-  "EVAL_INTERVAL": 10,
+  "EVAL_INTERVAL": 1,
   "MODEL_DIR": "./checkpoints",
   "CHECKPOINT": "UCM.pth"
 }

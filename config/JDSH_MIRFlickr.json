@@ -28,7 +28,7 @@
     "NUM_WORKERS" : 8,
     "EPOCH_INTERVAL" : 2,
     "NUM_EPOCH" : 300,
-    "EVAL_INTERVAL" : 40,
+    "EVAL_INTERVAL" : 1,
     "MODEL_DIR" : "./checkpoints",
     "CHECKPOINT" : "flikcr_128bit.pth"
 }

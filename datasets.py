@@ -1,13 +1,13 @@
 import torch
 from PIL import Image
-from args import config
+from args import cfg
 import numpy as np
 import scipy.io as scio
 from torchvision import transforms
 import h5py
 
 
-if config.DATASET == "UCM":
+if cfg.DATASET == "UCM":
 
     def load_ucm(path):
         with h5py.File(path, "r") as hf:
@@ -22,15 +22,15 @@ if config.DATASET == "UCM":
         return images, captions, labels
 
 
-    img_set, txt_set, label_set = load_ucm(config.DATASET_PATH)
+    img_set, txt_set, label_set = load_ucm(cfg.DATASET_PATH)
 
     indices = list(range(len(txt_set)))
-    np.random.seed(config.SEED)
+    np.random.seed(cfg.SEED)
     np.random.shuffle(indices)
 
-    indexTest = indices[:config.QUERY_SIZE]
-    indexDatabase = indices[config.QUERY_SIZE:]
-    indexTrain = indices[:config.TRAIN_SIZE]
+    indexTest = indices[:cfg.QUERY_SIZE]
+    indexDatabase = indices[cfg.QUERY_SIZE:]
+    indexTrain = indices[:cfg.TRAIN_SIZE]
 
     indexTest_img = [i // 5 for i in indexTest]
     indexDatabase_img = [i // 5 for i in indexDatabase]
@@ -71,11 +71,11 @@ if config.DATASET == "UCM":
             return index // 5, index
 
 
-if config.DATASET == "MIRFlickr":
+if cfg.DATASET == "MIRFlickr":
     
-    label_set = scio.loadmat(config.LABEL_DIR)
+    label_set = scio.loadmat(cfg.LABEL_DIR)
     label_set = np.array(label_set['LAll'], dtype=np.float)
-    txt_set = scio.loadmat(config.TXT_DIR)
+    txt_set = scio.loadmat(cfg.TXT_DIR)
     txt_set = np.array(txt_set['YAll'], dtype=np.float)
 
     first = True
@@ -149,7 +149,7 @@ if config.DATASET == "MIRFlickr":
 
         def __getitem__(self, index):
 
-            mirflickr = h5py.File(config.IMG_DIR, 'r', libver='latest', swmr=True)
+            mirflickr = h5py.File(cfg.IMG_DIR, 'r', libver='latest', swmr=True)
             img, target = mirflickr['IAll'][self.train_index[index]], self.train_labels[index]
             img = Image.fromarray(np.transpose(img, (2, 1, 0)))
             mirflickr.close()
@@ -167,11 +167,11 @@ if config.DATASET == "MIRFlickr":
         def __len__(self):
             return len(self.train_labels)
 
-if config.DATASET == "NUSWIDE":
+if cfg.DATASET == "NUSWIDE":
 
-    label_set = scio.loadmat(config.LABEL_DIR)
+    label_set = scio.loadmat(cfg.LABEL_DIR)
     label_set = np.array(label_set['LAll'], dtype=np.float)
-    txt_file = h5py.File(config.TXT_DIR,'r')
+    txt_file = h5py.File(cfg.TXT_DIR, 'r')
     txt_set = np.array(txt_file['YAll']).transpose()
     txt_file.close()
 
@@ -240,7 +240,7 @@ if config.DATASET == "NUSWIDE":
 
         def __getitem__(self, index):
 
-            nuswide = h5py.File(config.IMG_DIR, 'r', libver='latest', swmr=True)
+            nuswide = h5py.File(cfg.IMG_DIR, 'r', libver='latest', swmr=True)
             img, target = nuswide['IAll'][self.train_index[index]], self.train_labels[index]
             img = Image.fromarray(np.transpose(img, (2, 1, 0)))
             nuswide.close()
