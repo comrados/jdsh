@@ -7,6 +7,8 @@ from args import cfg
 def main():
     # log
     log = logger()
+    mode = 'TEST' if cfg.TEST else 'TRAIN'
+    log.info('Initialization: {}, {}, {} bits, {}'.format(cfg.MODEL, cfg.DATASET, cfg.HASH_BIT, mode))
 
     if cfg.MODEL == "DJSRH":
         model = DJSRH(log, cfg)
