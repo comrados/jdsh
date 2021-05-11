@@ -1410,3 +1410,279 @@
 2021-04-29 17:01:09,728 - INFO - Initialization: DJSRH, UCM, 128 bits, TEST
 2021-04-29 17:01:11,230 - INFO - **************** Load checkpoint ./checkpoints/DJSRH_128_UCM/best.pth ****************
 2021-04-29 17:02:49,376 - INFO - mAP I->T: 0.055, mAP T->I: 0.055, mAP I->I: 0.222, mAP T->T: 0.055
+2021-05-11 13:48:16,966 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 13:49:14,925 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 13:52:25,107 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 13:52:27,614 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 13:52:28,029 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 13:52:28,462 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 13:52:28,896 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 13:52:29,312 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 13:54:05,514 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 13:54:08,624 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 13:54:10,042 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 13:54:11,431 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 13:54:12,857 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 13:54:14,270 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 14:18:34,928 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 14:18:37,787 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 14:18:39,157 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 14:18:40,588 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 14:18:41,979 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 14:18:43,416 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 14:31:52,947 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 14:31:55,825 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 14:31:57,256 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 14:31:58,689 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 14:32:00,110 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 14:32:01,539 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 14:33:16,458 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 14:33:19,319 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 14:33:20,722 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 14:33:22,127 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 14:33:23,535 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 14:33:24,953 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 14:35:15,235 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 14:35:17,105 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 14:35:17,533 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 14:35:17,958 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 14:35:18,379 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 14:35:18,802 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 14:35:23,565 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 14:35:23,565 - INFO - mAP I->T: 0.282, mAP T->I: 0.429, mAP I->I: 0.263, mAP T->T: 0.429
+2021-05-11 14:35:24,004 - INFO - Epoch [6/100], Epoch Loss: 36.7610
+2021-05-11 14:35:24,450 - INFO - Epoch [7/100], Epoch Loss: 35.7757
+2021-05-11 14:35:24,877 - INFO - Epoch [8/100], Epoch Loss: 33.9329
+2021-05-11 14:35:25,304 - INFO - Epoch [9/100], Epoch Loss: 33.4360
+2021-05-11 14:35:25,821 - INFO - Epoch [10/100], Epoch Loss: 32.1408
+2021-05-11 14:35:30,687 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 14:35:30,687 - INFO - mAP I->T: 0.344, mAP T->I: 0.481, mAP I->I: 0.297, mAP T->T: 0.481
+2021-05-11 14:35:31,132 - INFO - Epoch [11/100], Epoch Loss: 31.2798
+2021-05-11 14:35:31,602 - INFO - Epoch [12/100], Epoch Loss: 30.1986
+2021-05-11 14:35:32,049 - INFO - Epoch [13/100], Epoch Loss: 29.9169
+2021-05-11 14:35:41,113 - INFO - Initialization: JDSH, UCM, 128 bits, TEST
+2021-05-11 14:35:42,565 - INFO - **************** Load checkpoint ./checkpoints/JDSH_128_UCM/best.pth ****************
+2021-05-11 14:38:29,679 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 14:38:32,615 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 14:38:34,022 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 14:38:35,465 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 14:38:36,908 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 14:38:38,352 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 14:40:28,514 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 14:40:31,371 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 14:40:32,761 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 14:40:34,176 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 14:40:35,562 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 14:40:36,976 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 16:12:48,026 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 16:12:50,068 - INFO - Epoch [1/100], Epoch Loss: 55.6948
+2021-05-11 16:12:50,529 - INFO - Epoch [2/100], Epoch Loss: 46.6545
+2021-05-11 16:12:51,002 - INFO - Epoch [3/100], Epoch Loss: 42.9477
+2021-05-11 16:12:51,445 - INFO - Epoch [4/100], Epoch Loss: 40.8155
+2021-05-11 16:12:51,907 - INFO - Epoch [5/100], Epoch Loss: 38.9683
+2021-05-11 16:12:57,115 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 16:12:57,115 - INFO - mAP I->T: 0.276, mAP T->I: 0.729, mAP I->I: 0.485, mAP T->T: 0.729
+2021-05-11 16:12:57,582 - INFO - Epoch [6/100], Epoch Loss: 36.7610
+2021-05-11 16:12:58,065 - INFO - Epoch [7/100], Epoch Loss: 35.7757
+2021-05-11 16:12:58,510 - INFO - Epoch [8/100], Epoch Loss: 33.9329
+2021-05-11 16:12:58,991 - INFO - Epoch [9/100], Epoch Loss: 33.4360
+2021-05-11 16:12:59,454 - INFO - Epoch [10/100], Epoch Loss: 32.1408
+2021-05-11 16:13:04,814 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 16:13:04,814 - INFO - mAP I->T: 0.372, mAP T->I: 0.723, mAP I->I: 0.494, mAP T->T: 0.723
+2021-05-11 16:13:05,286 - INFO - Epoch [11/100], Epoch Loss: 31.2798
+2021-05-11 16:13:05,769 - INFO - Epoch [12/100], Epoch Loss: 30.1986
+2021-05-11 16:13:06,292 - INFO - Epoch [13/100], Epoch Loss: 29.9169
+2021-05-11 16:13:06,795 - INFO - Epoch [14/100], Epoch Loss: 28.8200
+2021-05-11 16:13:07,265 - INFO - Epoch [15/100], Epoch Loss: 28.0993
+2021-05-11 16:13:12,539 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 16:13:12,539 - INFO - mAP I->T: 0.366, mAP T->I: 0.858, mAP I->I: 0.503, mAP T->T: 0.858
+2021-05-11 16:13:13,002 - INFO - Epoch [16/100], Epoch Loss: 28.2452
+2021-05-11 16:13:13,508 - INFO - Epoch [17/100], Epoch Loss: 27.2354
+2021-05-11 16:13:13,991 - INFO - Epoch [18/100], Epoch Loss: 26.7834
+2021-05-11 16:13:14,459 - INFO - Epoch [19/100], Epoch Loss: 26.7651
+2021-05-11 16:13:14,947 - INFO - Epoch [20/100], Epoch Loss: 26.7466
+2021-05-11 16:13:20,332 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 16:13:20,332 - INFO - mAP I->T: 0.406, mAP T->I: 0.886, mAP I->I: 0.525, mAP T->T: 0.886
+2021-05-11 16:13:20,798 - INFO - Epoch [21/100], Epoch Loss: 25.7509
+2021-05-11 16:13:21,249 - INFO - Epoch [22/100], Epoch Loss: 25.4704
+2021-05-11 16:13:21,689 - INFO - Epoch [23/100], Epoch Loss: 24.5956
+2021-05-11 16:13:22,167 - INFO - Epoch [24/100], Epoch Loss: 24.7316
+2021-05-11 16:13:22,612 - INFO - Epoch [25/100], Epoch Loss: 24.7075
+2021-05-11 16:13:27,945 - INFO - mAP I->T: 0.422, mAP T->I: 0.873, mAP I->I: 0.511, mAP T->T: 0.873
+2021-05-11 16:13:28,421 - INFO - Epoch [26/100], Epoch Loss: 23.7242
+2021-05-11 16:13:28,897 - INFO - Epoch [27/100], Epoch Loss: 23.8001
+2021-05-11 16:13:29,359 - INFO - Epoch [28/100], Epoch Loss: 23.7136
+2021-05-11 16:13:29,816 - INFO - Epoch [29/100], Epoch Loss: 23.3627
+2021-05-11 16:13:30,266 - INFO - Epoch [30/100], Epoch Loss: 22.6938
+2021-05-11 16:13:35,433 - INFO - mAP I->T: 0.405, mAP T->I: 0.877, mAP I->I: 0.509, mAP T->T: 0.877
+2021-05-11 16:13:35,881 - INFO - Epoch [31/100], Epoch Loss: 23.2504
+2021-05-11 16:13:36,377 - INFO - Epoch [32/100], Epoch Loss: 22.6650
+2021-05-11 16:13:36,875 - INFO - Epoch [33/100], Epoch Loss: 22.4086
+2021-05-11 16:13:37,388 - INFO - Epoch [34/100], Epoch Loss: 22.3402
+2021-05-11 16:13:37,857 - INFO - Epoch [35/100], Epoch Loss: 22.3548
+2021-05-11 16:13:43,152 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 16:13:43,152 - INFO - mAP I->T: 0.406, mAP T->I: 0.894, mAP I->I: 0.516, mAP T->T: 0.894
+2021-05-11 16:13:43,623 - INFO - Epoch [36/100], Epoch Loss: 21.7228
+2021-05-11 16:13:44,087 - INFO - Epoch [37/100], Epoch Loss: 22.4470
+2021-05-11 16:13:44,571 - INFO - Epoch [38/100], Epoch Loss: 21.8665
+2021-05-11 16:13:45,062 - INFO - Epoch [39/100], Epoch Loss: 21.6108
+2021-05-11 16:13:45,505 - INFO - Epoch [40/100], Epoch Loss: 21.9368
+2021-05-11 16:13:50,351 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 16:13:50,351 - INFO - mAP I->T: 0.471, mAP T->I: 0.898, mAP I->I: 0.498, mAP T->T: 0.898
+2021-05-11 16:13:50,810 - INFO - Epoch [41/100], Epoch Loss: 21.2414
+2021-05-11 16:13:51,266 - INFO - Epoch [42/100], Epoch Loss: 21.6898
+2021-05-11 16:13:51,709 - INFO - Epoch [43/100], Epoch Loss: 21.0203
+2021-05-11 16:13:52,146 - INFO - Epoch [44/100], Epoch Loss: 21.1696
+2021-05-11 16:13:52,585 - INFO - Epoch [45/100], Epoch Loss: 20.9223
+2021-05-11 16:13:57,458 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 16:13:57,458 - INFO - mAP I->T: 0.512, mAP T->I: 0.907, mAP I->I: 0.510, mAP T->T: 0.907
+2021-05-11 16:13:57,909 - INFO - Epoch [46/100], Epoch Loss: 21.5463
+2021-05-11 16:13:58,370 - INFO - Epoch [47/100], Epoch Loss: 21.1856
+2021-05-11 16:13:58,807 - INFO - Epoch [48/100], Epoch Loss: 20.7728
+2021-05-11 16:13:59,254 - INFO - Epoch [49/100], Epoch Loss: 21.0828
+2021-05-11 16:13:59,681 - INFO - Epoch [50/100], Epoch Loss: 21.0796
+2021-05-11 16:14:04,578 - INFO - mAP I->T: 0.504, mAP T->I: 0.878, mAP I->I: 0.511, mAP T->T: 0.878
+2021-05-11 16:14:05,023 - INFO - Epoch [51/100], Epoch Loss: 21.0850
+2021-05-11 16:14:05,469 - INFO - Epoch [52/100], Epoch Loss: 21.0835
+2021-05-11 16:14:05,926 - INFO - Epoch [53/100], Epoch Loss: 21.0606
+2021-05-11 16:14:06,404 - INFO - Epoch [54/100], Epoch Loss: 21.3048
+2021-05-11 16:14:06,872 - INFO - Epoch [55/100], Epoch Loss: 21.0737
+2021-05-11 16:14:11,966 - INFO - mAP I->T: 0.457, mAP T->I: 0.905, mAP I->I: 0.502, mAP T->T: 0.905
+2021-05-11 16:14:12,458 - INFO - Epoch [56/100], Epoch Loss: 20.9180
+2021-05-11 16:14:12,909 - INFO - Epoch [57/100], Epoch Loss: 20.7768
+2021-05-11 16:14:13,422 - INFO - Epoch [58/100], Epoch Loss: 21.0451
+2021-05-11 16:14:13,894 - INFO - Epoch [59/100], Epoch Loss: 20.6224
+2021-05-11 16:14:14,363 - INFO - Epoch [60/100], Epoch Loss: 21.1223
+2021-05-11 16:14:19,769 - INFO - mAP I->T: 0.503, mAP T->I: 0.869, mAP I->I: 0.505, mAP T->T: 0.869
+2021-05-11 16:14:20,306 - INFO - Epoch [61/100], Epoch Loss: 19.9953
+2021-05-11 16:14:20,782 - INFO - Epoch [62/100], Epoch Loss: 20.6263
+2021-05-11 16:14:21,294 - INFO - Epoch [63/100], Epoch Loss: 21.1400
+2021-05-11 16:14:21,751 - INFO - Epoch [64/100], Epoch Loss: 20.7474
+2021-05-11 16:14:22,248 - INFO - Epoch [65/100], Epoch Loss: 20.4112
+2021-05-11 16:14:27,474 - INFO - mAP I->T: 0.538, mAP T->I: 0.839, mAP I->I: 0.506, mAP T->T: 0.839
+2021-05-11 16:14:27,958 - INFO - Epoch [66/100], Epoch Loss: 20.9861
+2021-05-11 16:14:28,435 - INFO - Epoch [67/100], Epoch Loss: 20.2069
+2021-05-11 16:14:28,900 - INFO - Epoch [68/100], Epoch Loss: 20.9055
+2021-05-11 16:14:29,378 - INFO - Epoch [69/100], Epoch Loss: 20.3941
+2021-05-11 16:14:29,847 - INFO - Epoch [70/100], Epoch Loss: 20.7097
+2021-05-11 16:14:35,076 - INFO - mAP I->T: 0.513, mAP T->I: 0.883, mAP I->I: 0.516, mAP T->T: 0.883
+2021-05-11 16:14:35,567 - INFO - Epoch [71/100], Epoch Loss: 20.6263
+2021-05-11 16:14:36,031 - INFO - Epoch [72/100], Epoch Loss: 20.5720
+2021-05-11 16:14:36,499 - INFO - Epoch [73/100], Epoch Loss: 20.4869
+2021-05-11 16:14:36,974 - INFO - Epoch [74/100], Epoch Loss: 20.5656
+2021-05-11 16:14:37,449 - INFO - Epoch [75/100], Epoch Loss: 20.4216
+2021-05-11 16:14:42,446 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 16:14:42,446 - INFO - mAP I->T: 0.504, mAP T->I: 0.935, mAP I->I: 0.512, mAP T->T: 0.935
+2021-05-11 16:14:42,930 - INFO - Epoch [76/100], Epoch Loss: 20.2059
+2021-05-11 16:14:43,373 - INFO - Epoch [77/100], Epoch Loss: 20.3363
+2021-05-11 16:14:43,875 - INFO - Epoch [78/100], Epoch Loss: 20.1599
+2021-05-11 16:14:44,329 - INFO - Epoch [79/100], Epoch Loss: 20.4718
+2021-05-11 16:14:44,775 - INFO - Epoch [80/100], Epoch Loss: 20.4758
+2021-05-11 16:14:49,709 - INFO - mAP I->T: 0.499, mAP T->I: 0.936, mAP I->I: 0.505, mAP T->T: 0.936
+2021-05-11 16:14:50,159 - INFO - Epoch [81/100], Epoch Loss: 20.4136
+2021-05-11 16:14:50,608 - INFO - Epoch [82/100], Epoch Loss: 20.3050
+2021-05-11 16:14:51,072 - INFO - Epoch [83/100], Epoch Loss: 20.4774
+2021-05-11 16:14:51,519 - INFO - Epoch [84/100], Epoch Loss: 20.1642
+2021-05-11 16:14:51,959 - INFO - Epoch [85/100], Epoch Loss: 19.9672
+2021-05-11 16:14:57,002 - INFO - mAP I->T: 0.484, mAP T->I: 0.939, mAP I->I: 0.517, mAP T->T: 0.939
+2021-05-11 16:14:57,477 - INFO - Epoch [86/100], Epoch Loss: 20.2395
+2021-05-11 16:14:57,929 - INFO - Epoch [87/100], Epoch Loss: 20.5002
+2021-05-11 16:14:58,398 - INFO - Epoch [88/100], Epoch Loss: 20.3076
+2021-05-11 16:14:58,889 - INFO - Epoch [89/100], Epoch Loss: 20.1334
+2021-05-11 16:14:59,341 - INFO - Epoch [90/100], Epoch Loss: 19.7968
+2021-05-11 16:15:04,487 - INFO - mAP I->T: 0.475, mAP T->I: 0.888, mAP I->I: 0.502, mAP T->T: 0.888
+2021-05-11 16:15:04,981 - INFO - Epoch [91/100], Epoch Loss: 20.5223
+2021-05-11 16:15:05,476 - INFO - Epoch [92/100], Epoch Loss: 20.4317
+2021-05-11 16:15:06,013 - INFO - Epoch [93/100], Epoch Loss: 20.4306
+2021-05-11 16:15:06,512 - INFO - Epoch [94/100], Epoch Loss: 20.2734
+2021-05-11 16:15:07,014 - INFO - Epoch [95/100], Epoch Loss: 20.8564
+2021-05-11 16:15:12,442 - INFO - mAP I->T: 0.529, mAP T->I: 0.841, mAP I->I: 0.506, mAP T->T: 0.841
+2021-05-11 16:15:12,932 - INFO - Epoch [96/100], Epoch Loss: 20.2481
+2021-05-11 16:15:13,422 - INFO - Epoch [97/100], Epoch Loss: 20.7537
+2021-05-11 16:15:13,910 - INFO - Epoch [98/100], Epoch Loss: 20.4432
+2021-05-11 16:15:14,397 - INFO - Epoch [99/100], Epoch Loss: 20.7086
+2021-05-11 16:15:14,861 - INFO - Epoch [100/100], Epoch Loss: 20.6896
+2021-05-11 16:15:19,955 - INFO - mAP I->T: 0.530, mAP T->I: 0.913, mAP I->I: 0.522, mAP T->T: 0.913
+2021-05-11 16:15:19,962 - INFO - **********Save the trained model successfully: latest.pth **********
+2021-05-11 16:15:19,962 - INFO - Training complete in 2m 32s
+2021-05-11 16:15:19,962 - INFO - Best mAPs: (I->T: 0.504, T->I: 0.935, I->I: 0.512, T->T: 0.935)
+2021-05-11 18:19:50,215 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 18:19:52,179 - INFO - Epoch [1/100], Epoch Loss: 59.1923
+2021-05-11 18:19:52,649 - INFO - Epoch [2/100], Epoch Loss: 49.5065
+2021-05-11 18:19:53,114 - INFO - Epoch [3/100], Epoch Loss: 45.9214
+2021-05-11 18:19:53,579 - INFO - Epoch [4/100], Epoch Loss: 43.8092
+2021-05-11 18:19:54,055 - INFO - Epoch [5/100], Epoch Loss: 41.0732
+2021-05-11 18:19:56,242 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 18:19:56,243 - INFO - mAP I->T: 0.266, mAP T->I: 0.448, mAP I->I: 0.528, mAP T->T: 0.448
+2021-05-11 18:19:56,713 - INFO - Epoch [6/100], Epoch Loss: 39.3511
+2021-05-11 18:19:57,182 - INFO - Epoch [7/100], Epoch Loss: 37.1646
+2021-05-11 18:19:57,651 - INFO - Epoch [8/100], Epoch Loss: 35.8815
+2021-05-11 18:19:58,112 - INFO - Epoch [9/100], Epoch Loss: 35.1197
+2021-05-11 18:19:58,592 - INFO - Epoch [10/100], Epoch Loss: 34.0409
+2021-05-11 18:20:00,827 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 18:20:00,827 - INFO - mAP I->T: 0.365, mAP T->I: 0.590, mAP I->I: 0.542, mAP T->T: 0.590
+2021-05-11 18:20:01,284 - INFO - Epoch [11/100], Epoch Loss: 32.9767
+2021-05-11 18:20:01,762 - INFO - Epoch [12/100], Epoch Loss: 32.4578
+2021-05-11 18:20:02,233 - INFO - Epoch [13/100], Epoch Loss: 31.3572
+2021-05-11 18:20:02,703 - INFO - Epoch [14/100], Epoch Loss: 30.9808
+2021-05-11 18:20:03,193 - INFO - Epoch [15/100], Epoch Loss: 30.7761
+2021-05-11 18:20:05,373 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 18:20:05,373 - INFO - mAP I->T: 0.436, mAP T->I: 0.647, mAP I->I: 0.534, mAP T->T: 0.647
+2021-05-11 18:20:05,841 - INFO - Epoch [16/100], Epoch Loss: 30.1791
+2021-05-11 18:20:06,311 - INFO - Epoch [17/100], Epoch Loss: 29.3462
+2021-05-11 18:20:06,780 - INFO - Epoch [18/100], Epoch Loss: 28.4125
+2021-05-11 18:20:07,272 - INFO - Epoch [19/100], Epoch Loss: 28.5780
+2021-05-11 18:20:07,763 - INFO - Epoch [20/100], Epoch Loss: 27.8537
+2021-05-11 18:20:10,009 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 18:20:10,010 - INFO - mAP I->T: 0.463, mAP T->I: 0.652, mAP I->I: 0.564, mAP T->T: 0.652
+2021-05-11 18:20:10,478 - INFO - Epoch [21/100], Epoch Loss: 27.8819
+2021-05-11 18:20:10,940 - INFO - Epoch [22/100], Epoch Loss: 27.7391
+2021-05-11 18:20:11,421 - INFO - Epoch [23/100], Epoch Loss: 26.5772
+2021-05-11 18:20:11,892 - INFO - Epoch [24/100], Epoch Loss: 26.7275
+2021-05-11 18:20:12,381 - INFO - Epoch [25/100], Epoch Loss: 26.7001
+2021-05-11 18:20:14,558 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 18:20:14,559 - INFO - mAP I->T: 0.512, mAP T->I: 0.684, mAP I->I: 0.557, mAP T->T: 0.684
+2021-05-11 18:20:15,021 - INFO - Epoch [26/100], Epoch Loss: 26.0452
+2021-05-11 18:20:15,495 - INFO - Epoch [27/100], Epoch Loss: 25.6934
+2021-05-11 18:20:15,963 - INFO - Epoch [28/100], Epoch Loss: 25.7673
+2021-05-11 18:20:16,477 - INFO - Epoch [29/100], Epoch Loss: 25.9074
+2021-05-11 18:20:16,958 - INFO - Epoch [30/100], Epoch Loss: 24.9696
+2021-05-11 18:20:19,136 - INFO - mAP I->T: 0.478, mAP T->I: 0.641, mAP I->I: 0.549, mAP T->T: 0.641
+2021-05-11 18:20:19,634 - INFO - Epoch [31/100], Epoch Loss: 25.1261
+2021-05-11 18:20:20,124 - INFO - Epoch [32/100], Epoch Loss: 24.2437
+2021-05-11 18:20:20,590 - INFO - Epoch [33/100], Epoch Loss: 24.4832
+2021-05-11 18:20:21,088 - INFO - Epoch [34/100], Epoch Loss: 24.8402
+2021-05-11 18:20:21,556 - INFO - Epoch [35/100], Epoch Loss: 24.5409
+2021-05-11 18:20:23,709 - INFO - mAP I->T: 0.459, mAP T->I: 0.626, mAP I->I: 0.529, mAP T->T: 0.626
+2021-05-11 18:20:24,171 - INFO - Epoch [36/100], Epoch Loss: 23.8039
+2021-05-11 18:20:24,638 - INFO - Epoch [37/100], Epoch Loss: 24.3819
+2021-05-11 18:20:25,126 - INFO - Epoch [38/100], Epoch Loss: 24.0157
+2021-05-11 18:20:25,668 - INFO - Epoch [39/100], Epoch Loss: 23.9228
+2021-05-11 18:20:26,153 - INFO - Epoch [40/100], Epoch Loss: 23.4689
+2021-05-11 18:21:15,706 - INFO - Initialization: JDSH, UCM, 128 bits, TRAIN
+2021-05-11 18:21:17,622 - INFO - Epoch [1/100], Epoch Loss: 59.1923
+2021-05-11 18:21:18,112 - INFO - Epoch [2/100], Epoch Loss: 49.5065
+2021-05-11 18:21:18,593 - INFO - Epoch [3/100], Epoch Loss: 45.9214
+2021-05-11 18:21:19,064 - INFO - Epoch [4/100], Epoch Loss: 43.8092
+2021-05-11 18:21:19,551 - INFO - Epoch [5/100], Epoch Loss: 41.0732
+2021-05-11 18:21:21,772 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 18:21:21,773 - INFO - mAP I->T: 0.265, mAP T->I: 0.295, mAP I->I: 0.293, mAP T->T: 0.295
+2021-05-11 18:21:22,258 - INFO - Epoch [6/100], Epoch Loss: 39.3511
+2021-05-11 18:21:22,765 - INFO - Epoch [7/100], Epoch Loss: 37.1646
+2021-05-11 18:21:23,245 - INFO - Epoch [8/100], Epoch Loss: 35.8815
+2021-05-11 18:21:23,729 - INFO - Epoch [9/100], Epoch Loss: 35.1197
+2021-05-11 18:21:24,213 - INFO - Epoch [10/100], Epoch Loss: 34.0409
+2021-05-11 18:21:26,423 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 18:21:26,423 - INFO - mAP I->T: 0.355, mAP T->I: 0.392, mAP I->I: 0.313, mAP T->T: 0.392
+2021-05-11 18:21:26,917 - INFO - Epoch [11/100], Epoch Loss: 32.9767
+2021-05-11 18:21:27,417 - INFO - Epoch [12/100], Epoch Loss: 32.4578
+2021-05-11 18:21:27,904 - INFO - Epoch [13/100], Epoch Loss: 31.3572
+2021-05-11 18:21:28,400 - INFO - Epoch [14/100], Epoch Loss: 30.9808
+2021-05-11 18:21:28,877 - INFO - Epoch [15/100], Epoch Loss: 30.7761
+2021-05-11 18:21:31,123 - INFO - **********Save the trained model successfully: best.pth **********
+2021-05-11 18:21:31,124 - INFO - mAP I->T: 0.415, mAP T->I: 0.424, mAP I->I: 0.332, mAP T->T: 0.424
+2021-05-11 18:21:31,602 - INFO - Epoch [16/100], Epoch Loss: 30.1791
+2021-05-11 18:21:32,090 - INFO - Epoch [17/100], Epoch Loss: 29.3462
+2021-05-11 18:21:32,582 - INFO - Epoch [18/100], Epoch Loss: 28.4125
+2021-05-11 18:21:33,086 - INFO - Epoch [19/100], Epoch Loss: 28.5780
+2021-05-11 18:21:33,569 - INFO - Epoch [20/100], Epoch Loss: 27.8537

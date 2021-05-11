@@ -32,9 +32,9 @@ class JDSH:
             self.database_dataset = datasets.NUSWIDE(train=False, database=True, transform=datasets.nus_test_transform)
 
         if self.cfg.DATASET == "UCM":
-            self.train_dataset = datasets.UCM(train=True)
-            self.test_dataset = datasets.UCM(train=False, database=False)
-            self.database_dataset = datasets.UCM(train=False, database=True)
+            self.train_dataset = datasets.UCM(type='train')
+            self.test_dataset = datasets.UCM(type='query')
+            self.database_dataset = datasets.UCM(type='db')
 
         # Data Loader (Input Pipeline)
         self.train_loader = torch.utils.data.DataLoader(dataset=self.train_dataset,
@@ -123,11 +123,11 @@ class JDSH:
                                                           self.TxtNet, self.database_dataset, self.test_dataset,
                                                           self.cfg.LABEL_DIM)
 
-        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L)
-        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L)
+        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L, self.cfg.MAP_K)
+        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
 
-        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_L, re_L)
-        MAP_T2T = calc_map_k(qu_BT, re_BI, qu_L, re_L)
+        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_L, re_L, self.cfg.MAP_K)
+        MAP_T2T = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
 
         MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
 
@@ -164,10 +164,10 @@ class JDSH:
         pk_i2i = p_top_k(qu_BI, re_BI, qu_L, re_L, K, tqdm_label='I2I')
         pk_t2t = p_top_k(qu_BT, re_BT, qu_L, re_L, K, tqdm_label='T2T')
 
-        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L)
-        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L)
-        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_L, re_L)
-        MAP_T2T = calc_map_k(qu_BT, re_BI, qu_L, re_L)
+        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L, self.cfg.MAP_K)
+        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
+        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_L, re_L, self.cfg.MAP_K)
+        MAP_T2T = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
         MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
 
         pr_dict = {'pi2t': p_i2t.cpu().numpy(), 'ri2t': r_i2t.cpu().numpy(),

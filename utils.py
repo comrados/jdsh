@@ -84,7 +84,7 @@ def compress(train_loader, test_loader, model_I, model_T, train_dataset, test_da
     re_BI = list([])
     re_BT = list([])
     re_L = list([])
-    for _, (data_I, data_T, _, _) in enumerate(train_loader):
+    for _, (data_I, data_T, lab, _) in enumerate(train_loader):
         var_data_I = Variable(data_I.cuda())
         _, _, code_I = model_I(var_data_I)
         code_I = torch.sign(code_I)
@@ -95,10 +95,12 @@ def compress(train_loader, test_loader, model_I, model_T, train_dataset, test_da
         code_T = torch.sign(code_T)
         re_BT.extend(code_T.cpu().data.numpy())
 
+        re_L.extend(lab.cpu().data.numpy())
+
     qu_BI = list([])
     qu_BT = list([])
     qu_L = list([])
-    for _, (data_I, data_T, _, _) in enumerate(test_loader):
+    for _, (data_I, data_T, lab, _) in enumerate(test_loader):
         var_data_I = Variable(data_I.cuda())
         _, _, code_I = model_I(var_data_I)
         code_I = torch.sign(code_I)
@@ -109,17 +111,19 @@ def compress(train_loader, test_loader, model_I, model_T, train_dataset, test_da
         code_T = torch.sign(code_T)
         qu_BT.extend(code_T.cpu().data.numpy())
 
+        qu_L.extend(lab.cpu().data.numpy())
+
     re_BI = torch.from_numpy(np.array(re_BI)).cuda()
     re_BT = torch.from_numpy(np.array(re_BT)).cuda()
-    re_L = train_dataset.train_labels
+    re_L = torch.from_numpy(np.array(re_L)).cuda()
     if len(re_L.shape) == 1:
-        re_L = F.one_hot(torch.from_numpy(re_L), num_classes=label_dim).float().cuda()
+        re_L = F.one_hot(re_L, num_classes=label_dim).float().cuda()
 
     qu_BI = torch.from_numpy(np.array(qu_BI)).cuda()
     qu_BT = torch.from_numpy(np.array(qu_BT)).cuda()
-    qu_L = test_dataset.train_labels
+    qu_L = torch.from_numpy(np.array(qu_L)).cuda()
     if len(qu_L.shape) == 1:
-        qu_L = F.one_hot(torch.from_numpy(qu_L), num_classes=label_dim).float().cuda()
+        qu_L = F.one_hot(qu_L, num_classes=label_dim).float().cuda()
 
     return re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L
 
