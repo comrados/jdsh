@@ -127,7 +127,7 @@ class DJSRH:
         MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
 
         MAP_I2I = calc_map_k(qu_BI, re_BI, qu_L, re_L, self.cfg.MAP_K)
-        MAP_T2T = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
+        MAP_T2T = calc_map_k(qu_BT, re_BT, qu_L, re_L, self.cfg.MAP_K)
 
         MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
 
