@@ -4,7 +4,7 @@ import datasets
 import os.path as osp
 import os
 from models import ImgNet, TxtNet, ImgNetRS, TxtNetRS
-from utils import compress, calc_map_k, p_top_k, pr_curve, write_pickle
+from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle
 import time
 
 
@@ -106,10 +106,6 @@ class JDSH:
             self.opt_I.step()
             self.opt_T.step()
 
-            if (idx + 1) % (len(self.train_dataset) // self.cfg.BATCH_SIZE / self.cfg.EPOCH_INTERVAL) == 0:
-                # self.logger.info('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, idx + 1, len(self.train_dataset) // self.cfg.BATCH_SIZE, loss.item()))
-                pass
-
         self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, self.epoch_loss))
 
     def eval(self):
@@ -119,9 +115,9 @@ class JDSH:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = compress(self.database_loader, self.test_loader, self.ImgNet,
-                                                          self.TxtNet, self.database_dataset, self.test_dataset,
-                                                          self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = generate_hashes_from_dataloader(self.database_loader, self.test_loader,
+                                                                                 self.ImgNet, self.TxtNet,
+                                                                                 self.cfg.LABEL_DIM)
 
         MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L, self.cfg.MAP_K)
         MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
@@ -148,9 +144,9 @@ class JDSH:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = compress(self.database_loader, self.test_loader, self.ImgNet,
-                                                          self.TxtNet, self.database_dataset, self.test_dataset,
-                                                          self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = generate_hashes_from_dataloader(self.database_loader, self.test_loader,
+                                                                                 self.ImgNet, self.TxtNet,
+                                                                                 self.cfg.LABEL_DIM)
 
         p_i2t, r_i2t = pr_curve(qu_BI, re_BT, qu_L, re_L, tqdm_label='I2T')
         p_t2i, r_t2i = pr_curve(qu_BT, re_BI, qu_L, re_L, tqdm_label='T2I')
@@ -205,19 +201,19 @@ class JDSH:
         S_high = F.normalize(S_I).mm(F.normalize(S_T).t())
         S_ = self.cfg.alpha * S_I + self.cfg.beta * S_T + self.cfg.lamb * (S_high + S_high.t()) / 2
 
-#         S_ones = torch.ones_like(S_).cuda()
-#         S_eye = torch.eye(S_.size(0), S_.size(1)).cuda()
-#         S_mask = S_ones - S_eye
+        #         S_ones = torch.ones_like(S_).cuda()
+        #         S_eye = torch.eye(S_.size(0), S_.size(1)).cuda()
+        #         S_mask = S_ones - S_eye
 
         left = self.cfg.LOC_LEFT - self.cfg.ALPHA * self.cfg.SCALE_LEFT
         right = self.cfg.LOC_RIGHT + self.cfg.BETA * self.cfg.SCALE_RIGHT
 
         S_[S_ < left] = (1 + self.cfg.L1 * torch.exp(-(S_[S_ < left] - self.cfg.MIN))) \
-                              * S_[S_ < left]
+                        * S_[S_ < left]
         S_[S_ > right] = (1 + self.cfg.L2 * torch.exp(S_[S_ > right] - self.cfg.MAX)) \
-                               * S_[S_ > right]
+                         * S_[S_ > right]
 
-        S = S_  * self.cfg.mu
+        S = S_ * self.cfg.mu
 
         return S
 
@@ -232,7 +228,7 @@ class JDSH:
         BT_BI = B_T.mm(B_I.t())
 
         loss1 = F.mse_loss(BI_BI, S)
-        loss2 = F.mse_loss(BI_BT, S) + F.mse_loss(BT_BI, S) -(B_I * B_T).sum(dim=1).mean()
+        loss2 = F.mse_loss(BI_BT, S) + F.mse_loss(BT_BI, S) - (B_I * B_T).sum(dim=1).mean()
         loss3 = F.mse_loss(BT_BT, S)
 
         loss = self.cfg.INTRA * loss1 + loss2 + self.cfg.INTRA * loss3
@@ -269,11 +265,3 @@ class JDSH:
         delta = current - self.since
         self.logger.info('Training complete in {:.0f}m {:.0f}s'.format(delta // 60, delta % 60))
         self.logger.info('Best mAPs: (I->T: %.3f, T->I: %.3f, I->I: %.3f, T->T: %.3f)' % MAPS)
-
-
-
-
-
-
-
-

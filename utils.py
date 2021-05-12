@@ -80,7 +80,8 @@ def compress_wiki(train_loader, test_loader, modeli, modelt, train_dataset, test
     return re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L
 
 
-def compress(train_loader, test_loader, model_I, model_T, train_dataset, test_dataset, label_dim):
+def generate_hashes_from_dataloader(train_loader, test_loader, model_I, model_T, label_dim):
+    # response hashes / labels
     re_BI = list([])
     re_BT = list([])
     re_L = list([])
@@ -97,6 +98,7 @@ def compress(train_loader, test_loader, model_I, model_T, train_dataset, test_da
 
         re_L.extend(lab.cpu().data.numpy())
 
+    # query hashes / labels
     qu_BI = list([])
     qu_BT = list([])
     qu_L = list([])
@@ -113,6 +115,7 @@ def compress(train_loader, test_loader, model_I, model_T, train_dataset, test_da
 
         qu_L.extend(lab.cpu().data.numpy())
 
+    # prepare to output
     re_BI = torch.from_numpy(np.array(re_BI)).cuda()
     re_BT = torch.from_numpy(np.array(re_BT)).cuda()
     re_L = torch.from_numpy(np.array(re_L)).cuda()

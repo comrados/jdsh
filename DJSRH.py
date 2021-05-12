@@ -4,7 +4,7 @@ import datasets
 import os.path as osp
 import os
 from models import ImgNet, TxtNet, ImgNetRS, TxtNetRS
-from utils import compress, calc_map_k, p_top_k, pr_curve, write_pickle
+from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle
 import time
 
 
@@ -106,10 +106,6 @@ class DJSRH:
             self.opt_I.step()
             self.opt_T.step()
 
-            if (idx + 1) % (len(self.train_dataset) // self.cfg.BATCH_SIZE / self.cfg.EPOCH_INTERVAL) == 0:
-                # self.logger.info('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, idx + 1, len(self.train_dataset) // self.cfg.BATCH_SIZE, loss.item()))
-                pass
-
         self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, self.epoch_loss))
 
     def eval(self):
@@ -119,9 +115,9 @@ class DJSRH:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = compress(self.database_loader, self.test_loader, self.ImgNet,
-                                                          self.TxtNet, self.database_dataset, self.test_dataset,
-                                                          self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = generate_hashes_from_dataloader(self.database_loader, self.test_loader,
+                                                                                 self.ImgNet, self.TxtNet,
+                                                                                 self.cfg.LABEL_DIM)
 
         MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L, self.cfg.MAP_K)
         MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
@@ -148,9 +144,9 @@ class DJSRH:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = compress(self.database_loader, self.test_loader, self.ImgNet,
-                                                          self.TxtNet, self.database_dataset, self.test_dataset,
-                                                          self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = generate_hashes_from_dataloader(self.database_loader, self.test_loader,
+                                                                                 self.ImgNet, self.TxtNet,
+                                                                                 self.cfg.LABEL_DIM)
 
         p_i2t, r_i2t = pr_curve(qu_BI, re_BT, qu_L, re_L, tqdm_label='I2T')
         p_t2i, r_t2i = pr_curve(qu_BT, re_BI, qu_L, re_L, tqdm_label='T2I')
@@ -254,11 +250,3 @@ class DJSRH:
         delta = current - self.since
         self.logger.info('Training complete in {:.0f}m {:.0f}s'.format(delta // 60, delta % 60))
         self.logger.info('Best mAPs: (I->T: %.3f, T->I: %.3f, I->I: %.3f, T->T: %.3f)' % MAPS)
-
-
-
-
-
-
-
-
