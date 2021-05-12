@@ -26,7 +26,7 @@ def main():
             # save the model
             if epoch + 1 == cfg.NUM_EPOCH:
                 model.save_checkpoints()
-                model.training_coplete()
+                model.training_complete()
 
 
 if __name__ == '__main__':

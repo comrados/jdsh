@@ -153,8 +153,7 @@ class DJSRH:
         p_i2i, r_i2i = pr_curve(qu_BI, re_BI, qu_L, re_L, tqdm_label='I2I')
         p_t2t, r_t2t = pr_curve(qu_BT, re_BT, qu_L, re_L, tqdm_label='T2T')
 
-        K = [1, 10, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000,
-             10000]
+        K = [1, 10, 50] + list(range(100, 1000, 100)) + list(range(1000, 10001, 1000))
         pk_i2t = p_top_k(qu_BI, re_BT, qu_L, re_L, K, tqdm_label='I2T')
         pk_t2i = p_top_k(qu_BT, re_BI, qu_L, re_L, K, tqdm_label='T2I')
         pk_i2i = p_top_k(qu_BI, re_BI, qu_L, re_L, K, tqdm_label='I2I')
@@ -244,7 +243,7 @@ class DJSRH:
             self.ImgNet.load_state_dict(obj['ImgNet'])
             self.TxtNet.load_state_dict(obj['TxtNet'])
 
-    def training_coplete(self):
+    def training_complete(self):
         MAPS = (self.best_it, self.best_ti, self.best_ii, self.best_tt)
         current = time.time()
         delta = current - self.since
