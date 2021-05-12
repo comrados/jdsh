@@ -13,7 +13,7 @@
   "DATASET_PATH": "dataset/dataset_UCM.h5",
   "DATASET_QUERY_SPLIT": 0.3,
   "DATASET_TRAIN_SPLIT": 0.7,
-  "MAP_K":  20,
+  "MAP_K":  50,
   "SEED": 42,
   "QUERY_SIZE": 2000,
   "TRAIN_SIZE": 5000,
@@ -26,7 +26,7 @@
   "NUM_WORKERS": 8,
   "EPOCH_INTERVAL": 1,
   "NUM_EPOCH": 100,
-  "EVAL_INTERVAL": 5,
+  "EVAL_INTERVAL": 20,
   "MODEL_DIR": "./checkpoints",
   "CHECKPOINT": "UCM.pth"
 }
