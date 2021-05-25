@@ -115,15 +115,21 @@ class JDSH:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = generate_hashes_from_dataloader(self.database_loader, self.test_loader,
-                                                                                 self.ImgNet, self.TxtNet,
-                                                                                 self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT = generate_hashes_from_dataloader(self.database_loader,
+                                                                                   self.test_loader,
+                                                                                   self.ImgNet, self.TxtNet,
+                                                                                   self.cfg.LABEL_DIM)
 
-        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L, self.cfg.MAP_K)
-        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
+        qu_BI = self.get_each_5th_element(qu_BI)
+        re_BI = self.get_each_5th_element(re_BI)
+        qu_LI = self.get_each_5th_element(qu_LT)
+        re_LI = self.get_each_5th_element(re_LT)
 
-        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_L, re_L, self.cfg.MAP_K)
-        MAP_T2T = calc_map_k(qu_BT, re_BT, qu_L, re_L, self.cfg.MAP_K)
+        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_LI, re_LT, self.cfg.MAP_K)
+        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_LT, re_LI, self.cfg.MAP_K)
+
+        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_LI, re_LI, self.cfg.MAP_K)
+        MAP_T2T = calc_map_k(qu_BT, re_BT, qu_LT, re_LT, self.cfg.MAP_K)
 
         MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
 
@@ -140,29 +146,44 @@ class JDSH:
         # self.logger.info('Best MAP of I->T: %.3f, Best mAP of T->I: %.3f' % (self.best_it, self.best_ti))
         # self.logger.info('--------------------------------------------------------------------')
 
+    @staticmethod
+    def get_each_5th_element(arr):
+        """
+        intentionally ugly solution
+
+        :return: array
+        """
+        return arr[::5]
+
     def test(self):
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L = generate_hashes_from_dataloader(self.database_loader, self.test_loader,
-                                                                                 self.ImgNet, self.TxtNet,
-                                                                                 self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT = generate_hashes_from_dataloader(self.database_loader,
+                                                                                   self.test_loader,
+                                                                                   self.ImgNet, self.TxtNet,
+                                                                                   self.cfg.LABEL_DIM)
 
-        p_i2t, r_i2t = pr_curve(qu_BI, re_BT, qu_L, re_L, tqdm_label='I2T')
-        p_t2i, r_t2i = pr_curve(qu_BT, re_BI, qu_L, re_L, tqdm_label='T2I')
-        p_i2i, r_i2i = pr_curve(qu_BI, re_BI, qu_L, re_L, tqdm_label='I2I')
-        p_t2t, r_t2t = pr_curve(qu_BT, re_BT, qu_L, re_L, tqdm_label='T2T')
+        qu_BI = self.get_each_5th_element(qu_BI)
+        re_BI = self.get_each_5th_element(re_BI)
+        qu_LI = self.get_each_5th_element(qu_LT)
+        re_LI = self.get_each_5th_element(re_LT)
+
+        p_i2t, r_i2t = pr_curve(qu_BI, re_BT, qu_LI, re_LT, tqdm_label='I2T')
+        p_t2i, r_t2i = pr_curve(qu_BT, re_BI, qu_LT, re_LI, tqdm_label='T2I')
+        p_i2i, r_i2i = pr_curve(qu_BI, re_BI, qu_LI, re_LI, tqdm_label='I2I')
+        p_t2t, r_t2t = pr_curve(qu_BT, re_BT, qu_LT, re_LT, tqdm_label='T2T')
 
         K = [1, 10, 50] + list(range(100, 1000, 100)) + list(range(1000, 10001, 1000))
-        pk_i2t = p_top_k(qu_BI, re_BT, qu_L, re_L, K, tqdm_label='I2T')
-        pk_t2i = p_top_k(qu_BT, re_BI, qu_L, re_L, K, tqdm_label='T2I')
-        pk_i2i = p_top_k(qu_BI, re_BI, qu_L, re_L, K, tqdm_label='I2I')
-        pk_t2t = p_top_k(qu_BT, re_BT, qu_L, re_L, K, tqdm_label='T2T')
+        pk_i2t = p_top_k(qu_BI, re_BT, qu_LI, re_LT, K, tqdm_label='I2T')
+        pk_t2i = p_top_k(qu_BT, re_BI, qu_LT, re_LI, K, tqdm_label='T2I')
+        pk_i2i = p_top_k(qu_BI, re_BI, qu_LI, re_LI, K, tqdm_label='I2I')
+        pk_t2t = p_top_k(qu_BT, re_BT, qu_LT, re_LT, K, tqdm_label='T2T')
 
-        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_L, re_L, self.cfg.MAP_K)
-        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
-        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_L, re_L, self.cfg.MAP_K)
-        MAP_T2T = calc_map_k(qu_BT, re_BI, qu_L, re_L, self.cfg.MAP_K)
+        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_LI, re_LT, self.cfg.MAP_K)
+        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_LT, re_LI, self.cfg.MAP_K)
+        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_LI, re_LI, self.cfg.MAP_K)
+        MAP_T2T = calc_map_k(qu_BT, re_BT, qu_LT, re_LT, self.cfg.MAP_K)
         MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
 
         pr_dict = {'pi2t': p_i2t.cpu().numpy(), 'ri2t': r_i2t.cpu().numpy(),
