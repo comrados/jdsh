@@ -4,7 +4,7 @@ import datasets
 import os.path as osp
 import os
 from models import ImgNet, TxtNet, ImgNetRS, TxtNetRS
-from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle
+from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle, calc_map_rad
 import time
 
 
@@ -85,7 +85,6 @@ class DJSRH:
         self.TxtNet.set_alpha(epoch)
 
         for idx, (img, txt, _, _) in enumerate(self.train_loader):
-
             img = torch.FloatTensor(img).cuda()
             txt = torch.FloatTensor(txt.numpy()).cuda()
 
@@ -106,7 +105,7 @@ class DJSRH:
             self.opt_I.step()
             self.opt_T.step()
 
-        self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, self.epoch_loss))
+        # self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, self.epoch_loss))
 
     def eval(self):
 
@@ -115,22 +114,24 @@ class DJSRH:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT = generate_hashes_from_dataloader(self.database_loader, self.test_loader,
-                                                                                 self.ImgNet, self.TxtNet,
-                                                                                 self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT = generate_hashes_from_dataloader(self.database_loader,
+                                                                                   self.test_loader,
+                                                                                   self.ImgNet, self.TxtNet,
+                                                                                   self.cfg.LABEL_DIM)
 
         qu_BI = self.get_each_5th_element(qu_BI)
         re_BI = self.get_each_5th_element(re_BI)
         qu_LI = self.get_each_5th_element(qu_LT)
         re_LI = self.get_each_5th_element(re_LT)
 
-        MAP_I2T = calc_map_k(qu_BI, re_BT, qu_LI, re_LT, self.cfg.MAP_K)
-        MAP_T2I = calc_map_k(qu_BT, re_BI, qu_LT, re_LI, self.cfg.MAP_K)
-
-        MAP_I2I = calc_map_k(qu_BI, re_BI, qu_LI, re_LI, self.cfg.MAP_K)
-        MAP_T2T = calc_map_k(qu_BT, re_BT, qu_LT, re_LT, self.cfg.MAP_K)
+        MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, _ = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT,
+                                                                 self.cfg.MAP_K)
 
         MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
+
+        self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
+        self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 1)
+        self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 2)
 
         if (self.best_it + self.best_ti + self.best_ii + self.best_tt) < (MAP_I2T + MAP_T2I + MAP_I2I + MAP_T2T):
             self.best_it = MAP_I2T
@@ -141,7 +142,6 @@ class DJSRH:
             if not self.cfg.TEST:
                 self.save_checkpoints('best.pth')
 
-        self.logger.info('mAP I->T: %.3f, mAP T->I: %.3f, mAP I->I: %.3f, mAP T->T: %.3f' % MAPS)
         # self.logger.info('Best MAP of I->T: %.3f, Best mAP of T->I: %.3f' % (self.best_it, self.best_ti))
         # self.logger.info('--------------------------------------------------------------------')
 
@@ -158,9 +158,10 @@ class DJSRH:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT = generate_hashes_from_dataloader(self.database_loader, self.test_loader,
-                                                                                 self.ImgNet, self.TxtNet,
-                                                                                 self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT = generate_hashes_from_dataloader(self.database_loader,
+                                                                                   self.test_loader,
+                                                                                   self.ImgNet, self.TxtNet,
+                                                                                   self.cfg.LABEL_DIM)
 
         qu_BI = self.get_each_5th_element(qu_BI)
         re_BI = self.get_each_5th_element(re_BI)
@@ -268,3 +269,63 @@ class DJSRH:
         delta = current - self.since
         self.logger.info('Training complete in {:.0f}m {:.0f}s'.format(delta // 60, delta % 60))
         self.logger.info('Best mAPs: (I->T: %.3f, T->I: %.3f, I->I: %.3f, T->T: %.3f)' % MAPS)
+
+    def calc_maps_k(self, qBX, qBY, rBX, rBY, qLX, qLY, rLX, rLY, k):
+        """
+        Calculate MAPs, in regards to K
+
+        :param: qBX: query hashes, modality X
+        :param: qBY: query hashes, modality Y
+        :param: rBX: response hashes, modality X
+        :param: rBY: response hashes, modality Y
+        :param: qLX: query labels, modality X
+        :param: qLY: query labels, modality Y
+        :param: rLX: response labels, modality X
+        :param: rLY: response labels, modality Y
+        :param: k: k
+
+        :returns: MAPs
+        """
+        mapi2t = calc_map_k(qBX, rBY, qLX, rLY, k)
+        mapt2i = calc_map_k(qBY, rBX, qLY, rLX, k)
+        mapi2i = calc_map_k(qBX, rBX, qLX, rLX, k)
+        mapt2t = calc_map_k(qBY, rBY, qLY, rLY, k)
+
+        avg = (mapi2t.item() + mapt2i.item() + mapi2i.item() + mapt2t.item()) * 0.25
+
+        mapi2t, mapt2i, mapi2i, mapt2t, mapavg = mapi2t.item(), mapt2i.item(), mapi2i.item(), mapt2t.item(), avg
+
+        s = 'Valid: mAP@{}, avg: {:3.3f}, i->t: {:3.3f}, t->i: {:3.3f}, i->i: {:3.3f}, t->t: {:3.3f}'
+        self.logger.info(s.format(k, mapavg, mapi2t, mapt2i, mapi2i, mapt2t))
+
+        return mapi2t, mapt2i, mapi2i, mapt2t, mapavg
+
+    def calc_maps_rad(self, qBX, qBY, rBX, rBY, qLX, qLY, rLX, rLY, rad):
+        """
+        Calculate MAPs, in regard to Hamming radius
+
+        :param: qBX: query hashes, modality X
+        :param: qBY: query hashes, modality Y
+        :param: rBX: response hashes, modality X
+        :param: rBY: response hashes, modality Y
+        :param: qLX: query labels, modality X
+        :param: qLY: query labels, modality Y
+        :param: rLX: response labels, modality X
+        :param: rLY: response labels, modality Y
+        :param: rad: hamming radius
+
+        :returns: MAPs
+        """
+        mapi2t = calc_map_rad(qBX, rBY, qLX, rLY, rad)
+        mapt2i = calc_map_rad(qBY, rBX, qLY, rLX, rad)
+        mapi2i = calc_map_rad(qBX, rBX, qLX, rLX, rad)
+        mapt2t = calc_map_rad(qBY, rBY, qLY, rLY, rad)
+
+        avg = (mapi2t.item() + mapt2i.item() + mapi2i.item() + mapt2t.item()) * 0.25
+
+        mapi2t, mapt2i, mapi2i, mapt2t, mapavg = mapi2t.item(), mapt2i.item(), mapi2i.item(), mapt2t.item(), avg
+
+        s = 'Valid: mAP@{}, avg: {:3.3f}, i->t: {:3.3f}, t->i: {:3.3f}, i->i: {:3.3f}, t->t: {:3.3f}'
+        self.logger.info(s.format(rad, mapavg, mapi2t, mapt2i, mapi2i, mapt2t))
+
+        return mapi2t, mapt2i, mapi2i, mapt2t, mapavg

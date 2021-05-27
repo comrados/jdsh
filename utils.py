@@ -258,6 +258,50 @@ def calc_map_k(qB, rB, query_label, retrieval_label, k=None):
     return map
 
 
+def calc_map_rad(qB, rB, query_label, retrieval_label, rad=None):
+    """
+    calculate MAPs, in regard to hamming radius
+
+    :param qB: query binary codes
+    :param rB: response binary codes
+    :param query_label: labels of query
+    :param retrieval_label: labels of response
+    :param rad: radius
+    :return:
+    """
+
+    num_query = qB.shape[0]  # length of query (each sample from query compared to retrieval samples)
+    num_bit = qB.shape[1]  # length of hash code
+    P = torch.zeros(num_query, num_bit + 1)  # precisions (for each sample)
+
+    if rad is None or rad > num_bit:
+        rad = num_bit
+
+    # for each sample from query calculate precision and recall
+    for i in range(num_query):
+        # gnd[j] == 1 if same class, otherwise 0, ground truth
+        gnd = (query_label[i].unsqueeze(0).mm(retrieval_label.t()) > 0).float().squeeze()
+        # tsum (TP + FN): total number of samples of the same class
+        tsum = torch.sum(gnd)
+        if tsum == 0:
+            continue
+        hamm = calc_hamming_dist(qB[i, :], rB)  # hamming distances from qB[i, :] (current sample) to retrieval samples
+        # tmp[k,j] == 1 if hamming distance to retrieval sample j is less or equal to k (distance), 0 otherwise
+        tmp = (hamm <= torch.arange(0, num_bit + 1).reshape(-1, 1).float().to(hamm.device)).float()
+        # total (TP + FP): total[k] is count of distances less or equal to k (from query sample to retrieval samples)
+        total = tmp.sum(dim=-1)
+        total = total + (total == 0).float() * 0.0001  # replace zeros with 0.1 to avoid division by zero
+        # select only same class samples from tmp (ground truth masking, only rows where gnd == 1 proceed further)
+        t = gnd * tmp
+        # count (TP): number of true (correctly selected) samples of the same class for any given distance k
+        count = t.sum(dim=-1)
+        p = count / total  # TP / (TP + FP)
+        r = count / tsum  # TP / (TP + FN)
+        P[i] = p
+    P = P.mean(dim=0)
+    return P[rad]
+
+
 def pr_curve(qB, rB, query_label, retrieval_label, tqdm_label=''):
     if tqdm_label != '':
         tqdm_label = 'PR-curve ' + tqdm_label
