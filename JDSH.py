@@ -32,9 +32,9 @@ class JDSH:
             self.database_dataset = datasets.NUSWIDE(train=False, database=True, transform=datasets.nus_test_transform)
 
         if self.cfg.DATASET == "UCM":
-            self.train_dataset = datasets.UCM(type='train')
-            self.test_dataset = datasets.UCM(type='query')
-            self.database_dataset = datasets.UCM(type='db')
+            self.train_dataset = datasets.UCM2(type='train')
+            self.test_dataset = datasets.UCM2(type='query')
+            self.database_dataset = datasets.UCM2(type='db')
 
         # Data Loader (Input Pipeline)
         self.train_loader = torch.utils.data.DataLoader(dataset=self.train_dataset,
@@ -106,7 +106,7 @@ class JDSH:
             self.opt_I.step()
             self.opt_T.step()
 
-        #self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, self.epoch_loss))
+        self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, self.epoch_loss))
 
     def eval(self):
 

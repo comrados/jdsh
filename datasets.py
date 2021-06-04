@@ -81,19 +81,17 @@ if cfg.DATASET == "UCM":
     txt_feat_len = train[1].shape[1]
     img_feat_len = train[0].shape[1]
 
-    class UCM(torch.utils.data.Dataset):
+
+    class UCM5(torch.utils.data.Dataset):
 
         def __init__(self, type='train'):
 
             if type == 'train':
                 self.images, self.captions, self.labels = train
-                self.train_labels = self.labels
             elif type == 'db':
                 self.images, self.captions, self.labels = db
-                self.train_labels = self.labels
             elif type == 'query':
                 self.images, self.captions, self.labels = query
-                self.train_labels = self.labels
             else:
                 raise Exception('wrong type')
 
@@ -112,6 +110,50 @@ if cfg.DATASET == "UCM":
         @staticmethod
         def get_idx_combination_duplet(index):
             return index // 5, index
+
+
+    class UCM2(torch.utils.data.Dataset):
+
+        def __init__(self, type='train'):
+            self.type = type
+
+            if type == 'train':
+                self.images, self.captions, self.labels = train
+                self.captions = self.captions[self.randomly_select_caption_indexes()]
+            elif type == 'db':
+                self.images, self.captions, self.labels = db
+            elif type == 'query':
+                self.images, self.captions, self.labels = query
+            else:
+                raise Exception('wrong type')
+
+        def __getitem__(self, index):
+            idx_img, idx_txt = self.get_idx_combination_duplet(index)
+
+            txt = self.captions[idx_txt]
+            target = self.labels[idx_img]
+            img = self.images[idx_img]
+
+            return img, txt, target, index
+
+        def __len__(self):
+            return len(self.captions)
+
+        def get_idx_combination_duplet(self, index):
+            if self.type == 'train':
+                return index // 2, index
+            else:
+                return index // 5, index
+
+
+        def randomly_select_caption_indexes(self):
+            random.seed(cfg.SEED)
+            idxs = []
+            for i in range(len(self.images)):
+                ints = random.sample(range(5), 2)
+                idxs.append(i * 5 + ints[0])
+                idxs.append(i * 5 + ints[1])
+            return idxs
 
 if cfg.DATASET == "UCM_":
 
