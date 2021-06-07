@@ -145,7 +145,6 @@ if cfg.DATASET == "UCM":
             else:
                 return index // 5, index
 
-
         def randomly_select_caption_indexes(self):
             random.seed(cfg.SEED)
             idxs = []

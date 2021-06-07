@@ -124,14 +124,18 @@ class DJSRH:
         qu_LI = self.get_each_5th_element(qu_LT)
         re_LI = self.get_each_5th_element(re_LT)
 
-        MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, _ = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT,
-                                                                 self.cfg.MAP_K)
+        MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI,
+                                                                       re_LT, self.cfg.MAP_K)
 
         MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
 
-        self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
-        self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 1)
-        self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 2)
+        maps50 = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG)
+        maps20 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
+        maps1 = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 1)
+        maps2 = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 2)
+
+        maps_eval = (maps50, maps20, maps1, maps2)
+        write_pickle(osp.join(self.cfg.MODEL_DIR, self.path, 'maps_eval.pkl'), maps_eval)
 
         if (self.best_it + self.best_ti + self.best_ii + self.best_tt) < (MAP_I2T + MAP_T2I + MAP_I2I + MAP_T2T):
             self.best_it = MAP_I2T
