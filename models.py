@@ -61,6 +61,18 @@ class ImgNetRS(nn.Module):
             nn.Linear(hidden_len, code_len, bias=True)
         )
 
+        self.hash_net2 = nn.Sequential(
+            nn.Linear(img_feat_len, hidden_len, bias=True),
+            nn.BatchNorm1d(hidden_len),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_len, hidden_len, bias=True),
+            nn.BatchNorm1d(hidden_len),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_len, code_len, bias=True)
+        )
+
         self.hash_net2 = nn.Linear(img_feat_len, code_len, bias=True)
 
         self.alpha = 1.0
@@ -82,7 +94,7 @@ class TxtNetRS(nn.Module):
     def __init__(self, code_len, txt_feat_len, hidden_len):
         super(TxtNetRS, self).__init__()
 
-        self.hash_net = nn.Sequential(
+        self.hash_net2 = nn.Sequential(
             nn.Linear(txt_feat_len, hidden_len, bias=True),
             nn.BatchNorm1d(hidden_len),
             nn.ReLU(True),
@@ -90,7 +102,7 @@ class TxtNetRS(nn.Module):
             nn.Linear(hidden_len, code_len, bias=True)
         )
 
-        self.hash_net2 = nn.Linear(txt_feat_len, code_len, bias=True)
+        self.hash_net = nn.Linear(txt_feat_len, code_len, bias=True)
 
         self.alpha = 1.0
 

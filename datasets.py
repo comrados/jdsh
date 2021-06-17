@@ -145,7 +145,7 @@ if cfg.DATASET == "UCM":
             else:
                 return index // 5, index
 
-        def randomly_select_caption_indexes1(self):
+        def randomly_select_caption_indexes(self):
             random.seed(cfg.SEED)
             idxs = []
             for i in range(len(self.images)):
@@ -154,7 +154,7 @@ if cfg.DATASET == "UCM":
                 idxs.append(i * 5 + ints[1])
             return idxs
 
-        def randomly_select_caption_indexes(self):
+        def randomly_select_caption_indexes1(self):
             random.seed(cfg.SEED)
             idxs = []
             for i in range(len(self.images)):

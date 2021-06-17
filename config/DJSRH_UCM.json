@@ -10,7 +10,7 @@
   "LABEL_DIR": "dataset/dataset_UCM.h5",
   "TXT_DIR": "dataset/dataset_UCM.h5",
   "IMG_DIR": "dataset/dataset_UCM.h5",
-  "DATASET_PATH": "dataset/dataset_UCM.h5",
+  "DATASET_PATH": "dataset/dataset_UCM_aug_captions_images.h5",
   "DATASET_QUERY_SPLIT": 0.3,
   "DATASET_TRAIN_SPLIT": 0.7,
   "MAP_K":  50,
@@ -26,7 +26,7 @@
   "GPU_ID": 0,
   "NUM_WORKERS": 8,
   "EPOCH_INTERVAL": 1,
-  "NUM_EPOCH": 200,
+  "NUM_EPOCH": 300,
   "EVAL_INTERVAL": 100,
   "MODEL_DIR": "./checkpoints",
   "CHECKPOINT": "UCM.pth"
