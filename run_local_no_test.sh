@@ -15,6 +15,9 @@ echo "JDSH 32"
 echo "JDSH 64"
 /home/george/Code/dadh/venv/bin/python /home/george/Code/jdsh/main.py --bit 64
 
+echo "JDSH 128"
+/home/george/Code/dadh/venv/bin/python /home/george/Code/jdsh/main.py --bit 128
+
 echo "DJSRH 8"
 /home/george/Code/dadh/venv/bin/python /home/george/Code/jdsh/main.py --bit 8 --model DJSRH
 
@@ -26,4 +29,7 @@ echo "DJSRH 32"
 
 echo "DJSRH 64"
 /home/george/Code/dadh/venv/bin/python /home/george/Code/jdsh/main.py --bit 64 --model DJSRH
+
+echo "DJSRH 128"
+/home/george/Code/dadh/venv/bin/python /home/george/Code/jdsh/main.py --bit 128 --model DJSRH
 

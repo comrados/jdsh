@@ -42,6 +42,48 @@ if cfg.DATASET == "UCM":
         return train, query, db
 
 
+    def load_ucm_train_query_db_aug():
+        random.seed(cfg.SEED)
+        images, captions, labels, captions_aug, images_aug = load_ucm_aug()
+
+        train, query, db = split_ucm_aug(images, captions, labels, captions_aug, images_aug)
+
+        return train, query, db
+
+
+    def load_ucm_aug():
+        with h5py.File(cfg.DATASET_PATH, "r") as hf:
+            images = hf['image_emb'][:]
+            images = (images - images.mean()) / images.std()
+
+            captions = hf['caption_emb'][:]
+            captions = (captions - captions.mean()) / captions.std()
+
+            captions_aug = hf['caption_emb_aug'][:]
+            captions_aug = (captions_aug - captions_aug.mean()) / captions_aug.std()
+
+            images_aug = hf['image_emb_aug'][:]
+            images_aug = (images_aug - images_aug.mean()) / images_aug.std()
+
+            labels = hf['classcodes'][:]
+
+        return images, captions, labels, captions_aug, images_aug
+
+
+    def split_ucm_aug(images, captions, labels, captions_aug, images_aug):
+
+        idx_train, idx_query, idx_db = get_split_idxs(len(images))
+        idx_train_cap, idx_query_cap, idx_db_cap = get_caption_idxs(idx_train, idx_query, idx_db)
+
+        train = images[idx_train], captions[idx_train_cap], labels[idx_train], captions_aug[idx_train_cap], images_aug[
+            idx_train]
+        query = images[idx_query], captions[idx_query_cap], labels[idx_query], captions_aug[idx_query_cap], images_aug[
+            idx_query]
+        db = images[idx_db], captions[idx_db_cap], labels[idx_db], captions_aug[idx_db_cap], images_aug[idx_db]
+
+        return train, query, db
+
+
     def get_split_idxs(arr_len):
         idx_all = list(range(arr_len))
         idx_train, idx_eval = split_indexes(idx_all, cfg.DATASET_TRAIN_SPLIT)
@@ -77,6 +119,7 @@ if cfg.DATASET == "UCM":
 
 
     train, query, db = load_ucm_train_query_db()
+    train_aug, query_aug, db_aug = load_ucm_train_query_db_aug()
 
     txt_feat_len = train[1].shape[1]
     img_feat_len = train[0].shape[1]
@@ -110,6 +153,47 @@ if cfg.DATASET == "UCM":
         @staticmethod
         def get_idx_combination_duplet(index):
             return index // 5, index
+
+
+    class UCMAug(torch.utils.data.Dataset):
+
+        def __init__(self, type='train'):
+            self.images, self.captions, self.labels = None, None, None
+
+            if type == 'train':
+                i, c, l, ca, ia = train_aug
+                self.images = np.vstack((i, ia))
+                self.labels = np.hstack((l, l))
+
+                cidx = self.randomly_select_caption_indexes()
+                c = c[cidx]
+                ca = ca[cidx]
+                self.captions = np.vstack((c, ca))
+            elif type == 'db':
+                self.images, self.captions, self.labels, _, _ = db_aug
+            elif type == 'query':
+                self.images, self.captions, self.labels, _, _ = query_aug
+            else:
+                raise Exception('wrong type')
+
+        def __getitem__(self, index):
+
+            txt = self.captions[index]
+            target = self.labels[index]
+            img = self.images[index]
+
+            return img, txt, target, index
+
+        def __len__(self):
+            return len(self.images)
+
+        def randomly_select_caption_indexes(self):
+            random.seed(cfg.SEED)
+            idxs = []
+            for i in range(len(self.images) // 2):
+                ints = random.sample(range(5), 1)
+                idxs.append(i * 5 + ints[0])
+            return idxs
 
 
     class UCM2(torch.utils.data.Dataset):
