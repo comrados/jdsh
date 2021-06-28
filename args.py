@@ -5,8 +5,9 @@ parser = argparse.ArgumentParser(description='JDSH and DJSRH')
 parser.add_argument('--test', default=False, help='train or test', action='store_true')
 parser.add_argument('--dataset', default='UCM', help='MIRFlickr or NUSWIDE', type=str)
 parser.add_argument('--checkpoint', default='UCM.pth', help='checkpoint name', type=str)
-parser.add_argument('--bit', default=128, help='hash bit', type=int)
+parser.add_argument('--bit', default=32, help='hash bit', type=int)
 parser.add_argument('--model', default='JDSH', help='JDSH or DJSRH', type=str)
+parser.add_argument('--tag', default='test', help='model tag', type=str)
 
 args = parser.parse_args()
 
@@ -43,3 +44,4 @@ cfg.DATASET = args.dataset
 cfg.CHECKPOINT = args.checkpoint
 cfg.HASH_BIT = args.bit
 cfg.MODEL = args.model
+cfg.TAG = args.tag.upper()

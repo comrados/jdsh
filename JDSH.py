@@ -14,7 +14,7 @@ class JDSH:
         self.logger = log
         self.cfg = cfg
         self.epoch_loss = 0.
-        self.path = "_".join([self.cfg.MODEL, str(self.cfg.HASH_BIT), self.cfg.DATASET])
+        self.path = "_".join([self.cfg.MODEL, str(self.cfg.HASH_BIT), self.cfg.DATASET, self.cfg.TAG])
 
         torch.manual_seed(1)
         torch.cuda.manual_seed_all(1)
@@ -32,9 +32,9 @@ class JDSH:
             self.database_dataset = datasets.NUSWIDE(train=False, database=True, transform=datasets.nus_test_transform)
 
         if self.cfg.DATASET == "UCM":
-            self.train_dataset = datasets.UCM2(type='train')
-            self.test_dataset = datasets.UCM2(type='query')
-            self.database_dataset = datasets.UCM2(type='db')
+            self.train_dataset = datasets.UCMAug(type='train')
+            self.test_dataset = datasets.UCMAug(type='query')
+            self.database_dataset = datasets.UCMAug(type='db')
 
         # Data Loader (Input Pipeline)
         self.train_loader = torch.utils.data.DataLoader(dataset=self.train_dataset,
@@ -136,7 +136,6 @@ class JDSH:
         maps2 = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 2)
 
         maps_eval = (maps50, maps20, maps1, maps2)
-        write_pickle(osp.join(self.cfg.MODEL_DIR, self.path, 'maps_eval.pkl'), maps_eval)
 
         if (self.best_it + self.best_ti + self.best_ii + self.best_tt) < (MAP_I2T + MAP_T2I + MAP_I2I + MAP_T2T):
             self.best_it = MAP_I2T
@@ -147,9 +146,12 @@ class JDSH:
             if not self.cfg.TEST:
                 self.save_checkpoints('best.pth')
 
+        if not self.cfg.TEST:
+            self.save_checkpoints('last.pth')
+            write_pickle(osp.join(self.cfg.MODEL_DIR, self.path, 'maps_eval.pkl'), maps_eval)
+
         # self.logger.info('Best MAP of I->T: %.3f, Best mAP of T->I: %.3f' % (self.best_it, self.best_ti))
         # self.logger.info('--------------------------------------------------------------------')
-
 
     @staticmethod
     def get_each_5th_element(arr):
@@ -346,7 +348,7 @@ class JDSH:
 
         mapi2t, mapt2i, mapi2i, mapt2t, mapavg = mapi2t.item(), mapt2i.item(), mapi2i.item(), mapt2t.item(), avg
 
-        s = 'Valid: mAP@{}, avg: {:3.3f}, i->t: {:3.3f}, t->i: {:3.3f}, i->i: {:3.3f}, t->t: {:3.3f}'
+        s = 'Valid: mAP HR{}, avg: {:3.3f}, i->t: {:3.3f}, t->i: {:3.3f}, i->i: {:3.3f}, t->t: {:3.3f}'
         self.logger.info(s.format(rad, mapavg, mapi2t, mapt2i, mapi2i, mapt2t))
 
         return mapi2t, mapt2i, mapi2i, mapt2t, mapavg
