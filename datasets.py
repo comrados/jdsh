@@ -198,12 +198,18 @@ if cfg.DATASET == "UCM":
 
     class UCM2(torch.utils.data.Dataset):
 
-        def __init__(self, type='train'):
+        def __init__(self, type='train', data_amount='normal'):
             self.type = type
 
             if type == 'train':
                 self.images, self.captions, self.labels = train
-                self.captions = self.captions[self.randomly_select_caption_indexes()]
+
+                if data_amount == 'normal':
+                    caption_indexes = self.randomly_select_caption_indexes_single()
+                else:
+                    caption_indexes = self.randomly_select_caption_indexes_double()
+
+                self.captions = self.captions[caption_indexes]
             elif type == 'db':
                 self.images, self.captions, self.labels = db
             elif type == 'query':
@@ -213,7 +219,6 @@ if cfg.DATASET == "UCM":
 
         def __getitem__(self, index):
             idx_img, idx_txt = self.get_idx_combination_duplet(index)
-
             txt = self.captions[idx_txt]
             target = self.labels[idx_img]
             img = self.images[idx_img]
@@ -224,12 +229,15 @@ if cfg.DATASET == "UCM":
             return len(self.captions)
 
         def get_idx_combination_duplet(self, index):
-            if self.type == 'train':
-                return index // 2, index
+            if len(self.captions) > len(self.images):
+                if self.type == 'train':
+                    return index // 2, index
+                else:
+                    return index // 5, index
             else:
-                return index // 5, index
+                return index, index
 
-        def randomly_select_caption_indexes(self):
+        def randomly_select_caption_indexes_double(self):
             random.seed(cfg.SEED)
             idxs = []
             for i in range(len(self.images)):
@@ -238,7 +246,7 @@ if cfg.DATASET == "UCM":
                 idxs.append(i * 5 + ints[1])
             return idxs
 
-        def randomly_select_caption_indexes1(self):
+        def randomly_select_caption_indexes_single(self):
             random.seed(cfg.SEED)
             idxs = []
             for i in range(len(self.images)):

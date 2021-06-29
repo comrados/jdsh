@@ -32,9 +32,10 @@ class JDSH:
             self.database_dataset = datasets.NUSWIDE(train=False, database=True, transform=datasets.nus_test_transform)
 
         if self.cfg.DATASET == "UCM":
-            self.train_dataset = datasets.UCMAug(type='train')
-            self.test_dataset = datasets.UCMAug(type='query')
-            self.database_dataset = datasets.UCMAug(type='db')
+            da = self.cfg.DATA_AMOUNT
+            self.train_dataset = datasets.UCM2(type='train', data_amount=da)
+            self.test_dataset = datasets.UCM2(type='query', data_amount=da)
+            self.database_dataset = datasets.UCM2(type='db', data_amount=da)
 
         # Data Loader (Input Pipeline)
         self.train_loader = torch.utils.data.DataLoader(dataset=self.train_dataset,
@@ -132,10 +133,9 @@ class JDSH:
 
         maps50 = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG)
         maps20 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
-        maps1 = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 1)
-        maps2 = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 2)
+        mapshr = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, [0, 1, 2, 3, 4, 5])
 
-        maps_eval = (maps50, maps20, maps1, maps2)
+        maps_eval = (maps50, maps20, mapshr)
 
         if (self.best_it + self.best_ti + self.best_ii + self.best_tt) < (MAP_I2T + MAP_T2I + MAP_I2I + MAP_T2T):
             self.best_it = MAP_I2T
@@ -323,7 +323,7 @@ class JDSH:
 
         return mapi2t, mapt2i, mapi2i, mapt2t, mapavg
 
-    def calc_maps_rad(self, qBX, qBY, rBX, rBY, qLX, qLY, rLX, rLY, rad):
+    def calc_maps_rad(self, qBX, qBY, rBX, rBY, qLX, qLY, rLX, rLY, rs):
         """
         Calculate MAPs, in regard to Hamming radius
 
@@ -335,20 +335,19 @@ class JDSH:
         :param: qLY: query labels, modality Y
         :param: rLX: response labels, modality X
         :param: rLY: response labels, modality Y
-        :param: rad: hamming radius
+        :param: rs: hamming radiuses to output
 
         :returns: MAPs
         """
-        mapi2t = calc_map_rad(qBX, rBY, qLX, rLY, rad)
-        mapt2i = calc_map_rad(qBY, rBX, qLY, rLX, rad)
-        mapi2i = calc_map_rad(qBX, rBX, qLX, rLX, rad)
-        mapt2t = calc_map_rad(qBY, rBY, qLY, rLY, rad)
+        mapsi2t = calc_map_rad(qBX, rBY, qLX, rLY)
+        mapst2i = calc_map_rad(qBY, rBX, qLY, rLX)
+        mapsi2i = calc_map_rad(qBX, rBX, qLX, rLX)
+        mapst2t = calc_map_rad(qBY, rBY, qLY, rLY)
 
-        avg = (mapi2t.item() + mapt2i.item() + mapi2i.item() + mapt2t.item()) * 0.25
+        mapsi2t, mapst2i, mapsi2i, mapst2t = mapsi2t.numpy(), mapst2i.numpy(), mapsi2i.numpy(), mapst2t.numpy()
 
-        mapi2t, mapt2i, mapi2i, mapt2t, mapavg = mapi2t.item(), mapt2i.item(), mapi2i.item(), mapt2t.item(), avg
+        s = 'Valid: mAP HR{}, i->t: {:3.3f}, t->i: {:3.3f}, i->i: {:3.3f}, t->t: {:3.3f}'
+        for r in rs:
+            self.logger.info(s.format(r, mapsi2t[r], mapst2i[r], mapsi2i[r], mapst2t[r]))
 
-        s = 'Valid: mAP HR{}, avg: {:3.3f}, i->t: {:3.3f}, t->i: {:3.3f}, i->i: {:3.3f}, t->t: {:3.3f}'
-        self.logger.info(s.format(rad, mapavg, mapi2t, mapt2i, mapi2i, mapt2t))
-
-        return mapi2t, mapt2i, mapi2i, mapt2t, mapavg
+        return mapsi2t, mapst2i, mapsi2i, mapst2t

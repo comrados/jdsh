@@ -258,7 +258,7 @@ def calc_map_k(qB, rB, query_label, retrieval_label, k=None):
     return map
 
 
-def calc_map_rad(qB, rB, query_label, retrieval_label, rad=None):
+def calc_map_rad(qB, rB, query_label, retrieval_label):
     """
     calculate MAPs, in regard to hamming radius
 
@@ -266,16 +266,12 @@ def calc_map_rad(qB, rB, query_label, retrieval_label, rad=None):
     :param rB: response binary codes
     :param query_label: labels of query
     :param retrieval_label: labels of response
-    :param rad: radius
     :return:
     """
 
     num_query = qB.shape[0]  # length of query (each sample from query compared to retrieval samples)
     num_bit = qB.shape[1]  # length of hash code
     P = torch.zeros(num_query, num_bit + 1)  # precisions (for each sample)
-
-    if rad is None or rad > num_bit:
-        rad = num_bit
 
     # for each sample from query calculate precision and recall
     for i in range(num_query):
@@ -296,10 +292,9 @@ def calc_map_rad(qB, rB, query_label, retrieval_label, rad=None):
         # count (TP): number of true (correctly selected) samples of the same class for any given distance k
         count = t.sum(dim=-1)
         p = count / total  # TP / (TP + FP)
-        r = count / tsum  # TP / (TP + FN)
         P[i] = p
     P = P.mean(dim=0)
-    return P[rad]
+    return P
 
 
 def pr_curve(qB, rB, query_label, retrieval_label, tqdm_label=''):

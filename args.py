@@ -8,6 +8,7 @@ parser.add_argument('--checkpoint', default='UCM.pth', help='checkpoint name', t
 parser.add_argument('--bit', default=32, help='hash bit', type=int)
 parser.add_argument('--model', default='JDSH', help='JDSH or DJSRH', type=str)
 parser.add_argument('--tag', default='test', help='model tag', type=str)
+parser.add_argument('--data-amount', default='double', help="data amount: 'normal' or 'double'", type=str)
 
 args = parser.parse_args()
 
@@ -45,3 +46,4 @@ cfg.CHECKPOINT = args.checkpoint
 cfg.HASH_BIT = args.bit
 cfg.MODEL = args.model
 cfg.TAG = args.tag.upper()
+cfg.DATA_AMOUNT = args.data_amount
