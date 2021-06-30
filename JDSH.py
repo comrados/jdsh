@@ -4,7 +4,7 @@ import datasets
 import os.path as osp
 import os
 from models import ImgNet, TxtNet, ImgNetRS, TxtNetRS
-from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle, calc_map_rad, build_binary_hists
+from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle, calc_map_rad, build_binary_hists, top_k_hists
 import time
 
 
@@ -135,6 +135,7 @@ class JDSH:
         maps20 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
         mapshr = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, [0, 1, 2, 3, 4, 5])
 
+        top_k_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
         build_binary_hists(qu_BI, qu_BT, re_BI, re_BT, 'JDSH', [i[0] for i in mapshr])
 
         maps_eval = (maps50, maps20, mapshr)

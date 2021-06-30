@@ -448,3 +448,45 @@ def build_binary_hists(qBX, qBY, rBX, rBY, model, maps_r0):
         plot_stacked_bar(d, experiment, ax)
     plt.savefig(os.path.join('plots', 'hists_' + model + '.png'))
 
+
+def top_k_hists(qBX, qBY, rBX, rBY, k=20, model=''):
+    def top_k_hist_data(qB, rB, k):
+        n = len(qB)
+        d = {}
+        for i in range(n):
+            ham_dist = calc_hamming_dist(qB[i, :], rB).squeeze().detach().cpu()
+            ham_dist_sorted, idxs = torch.sort(ham_dist)
+
+            ham_dist_sorted_k = ham_dist_sorted[:k].cpu().numpy()
+            values, counts = np.unique(ham_dist_sorted_k, return_counts=True)
+            for v, c in zip(values.astype(int), counts):
+                if v in d:
+                    d[v] += c
+                else:
+                    d[v] = c
+
+        x = list(range(max(d.keys())))
+        y = [d[j] if j in d else 0 for j in range(max(d.keys()))]
+
+        return x, y, n
+
+    def plot_top_k_hist(x, y, n, tag, ax):
+        ax.bar(x, y, width=1)
+        plt.title(tag.upper(), size=20, weight='medium')
+        plt.grid(axis='y')
+        ax.set_xticks(x)
+
+    i2t = top_k_hist_data(qBX, rBY, k)
+    t2i = top_k_hist_data(qBY, rBX, k)
+    i2i = top_k_hist_data(qBX, rBX, k)
+    t2t = top_k_hist_data(qBY, rBY, k)
+
+    data = [i2t, t2i, i2i, t2t]
+    tags = ['i2t', 't2i', 'i2i', 't2t']
+
+    fig = plt.figure(figsize=(16, 8))
+    for i, (tag, d) in enumerate(zip(tags, data)):
+        ax = fig.add_subplot(2, 2, i + 1)
+        plot_top_k_hist(*d, ', '.join([tag, model, 'k: {}'.format(k), 'q/r: {}/{}'.format(d[-1], d[-1] * k)]), ax)
+    plt.tight_layout()
+    plt.savefig(os.path.join('plots', 'top_k_hists_' + model + '.png'))
