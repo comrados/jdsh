@@ -6,6 +6,9 @@ import logging
 import os.path as osp
 from tqdm import tqdm
 import pickle
+import matplotlib.pyplot as plt
+import os
+from args import cfg
 
 
 def calc_hamming_dist(B1, B2):
@@ -375,3 +378,73 @@ def p_top_k(qB, rB, query_label, retrieval_label, K, tqdm_label=''):
 def write_pickle(path, data):
     with open(path, 'wb') as f:
         pickle.dump(data, f)
+
+
+def build_binary_hists(qBX, qBY, rBX, rBY, model, maps_r0):
+    def get_dict_of_binaries(binary_codes):
+
+        def bin2dec(bin):
+            bin = bin.detach().cpu().numpy()
+            dec = np.uint64(0)
+            for mag, bit in enumerate(bin[::-1]):
+                dec += np.uint64(1 if bit >= 0 else 0) * np.power(np.uint64(2), np.uint64(mag), dtype=np.uint64)
+            return dec
+
+        dict_of_binaries = {}
+        l = binary_codes.shape[0]
+        for i in range(l):
+            dec = bin2dec(binary_codes[i])
+            if dec not in dict_of_binaries:
+                dict_of_binaries[dec] = 1
+            else:
+                dict_of_binaries[dec] += 1
+
+        return dict_of_binaries
+
+    def get_stacked_bar_dict(qBd, rBd):
+        joint_dict = qBd.copy()
+        for k, v in joint_dict.items():
+            joint_dict[k] = (v, 0)
+        for k, v in rBd.items():
+            if k in joint_dict:
+                joint_dict[k] = (joint_dict[k][0], v)
+            else:
+                joint_dict[k] = (0, v)
+        return joint_dict
+
+    def plot_stacked_bar(stacked_bar_dict, tag, ax):
+        labels = [str(i) for i in stacked_bar_dict.keys()]
+        q = [i[0] for i in stacked_bar_dict.values()]
+        r = [i[1] for i in stacked_bar_dict.values()]
+        width = 1
+
+        ax.bar(labels, q, width, label='Query')
+        ax.bar(labels, r, width, bottom=q, label='Recall')
+        plt.xticks([])
+        plt.grid()
+        ax.set_ylabel('Quantity')
+        ax.set_title(tag.upper(), size=50, weight='medium')
+        ax.legend()
+        plt.tight_layout()
+
+    qBXd = get_dict_of_binaries(qBX)
+    qBYd = get_dict_of_binaries(qBY)
+    rBXd = get_dict_of_binaries(rBX)
+    rBYd = get_dict_of_binaries(rBY)
+
+    i2t = get_stacked_bar_dict(qBXd, rBYd)
+    t2i = get_stacked_bar_dict(qBYd, rBXd)
+    i2i = get_stacked_bar_dict(qBXd, rBXd)
+    t2t = get_stacked_bar_dict(qBYd, rBYd)
+
+    tags = ['i2t', 't2i', 'i2i', 't2t']
+    dicts = [i2t, t2i, i2i, t2t]
+
+    fig = plt.figure(figsize=(60, 40))
+    for i, (tag, d, mr0) in enumerate(zip(tags, dicts, maps_r0)):
+        bins_used = 'buckets: {} / {}'.format(len(d), 2 ** cfg.HASH_BIT)
+        experiment = ', '.join([tag, model, "mAP HR0: {:3.3f}".format(mr0), bins_used])
+        ax = fig.add_subplot(2, 2, i + 1)
+        plot_stacked_bar(d, experiment, ax)
+    plt.savefig(os.path.join('plots', 'hists_' + model + '.png'))
+
