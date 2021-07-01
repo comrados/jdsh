@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn.functional as F
 import datasets
@@ -6,6 +7,10 @@ import os
 from models import ImgNet, TxtNet, ImgNetRS, TxtNetRS
 from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle, calc_map_rad, build_binary_hists, top_k_hists
 import time
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
 
 
 class JDSH:
@@ -85,6 +90,66 @@ class JDSH:
         self.ImgNet.set_alpha(epoch)
         self.TxtNet.set_alpha(epoch)
 
+        S = None
+
+        # plot distribution hist, get hyperparameters based on gaussian and laplacian distributions
+        if epoch == 0:
+            for idx, (img, txt, _, _) in enumerate(self.train_loader):
+
+                with torch.no_grad():
+                    img = torch.FloatTensor(img).cuda()
+                    txt = torch.FloatTensor(txt.numpy()).cuda()
+
+                    F_I, hid_I, code_I = self.ImgNet(img)
+                    code_T = self.TxtNet(txt)
+
+                    S_batch = self.get_S(F_I, txt)
+
+                    if S is None:
+                        S = S_batch
+                    else:
+                        S = torch.hstack([S, S_batch])
+
+            S = S.detach().cpu().numpy()
+
+            # remove high numbers (diagonal)
+            S = S[S < 100]
+
+            smin = S.min()
+            smax = S.max()
+
+            plt.figure(figsize=(20, 20))
+
+            x = sns.displot(S, color='lightgray')
+
+            # distribution
+            Sm = x.ax.patches[np.argmax([h.get_height() for h in x.ax.patches])].xy[0]
+            l = np.max([h.get_height() for h in x.ax.patches])
+            plt.plot([Sm, Sm], [0, l * 1.1], c='red', label='Mode = {:2.3f}'.format(Sm))
+
+            # gauss distr
+            Sgauss_l = np.sort(S[S < Sm])
+            Sgauss_r = Sm - Sgauss_l + Sm
+            Sgauss = np.append(Sgauss_l, Sgauss_r, axis=0)  # array must be symmentric with regard to Sm
+            mg, sg = stats.norm.fit(Sgauss)
+            lsg = np.linspace(smin, Sm, len(Sgauss))
+            pdf_g = stats.norm.pdf(lsg, mg, sg)
+            pdf_g = pdf_g / pdf_g.max() * l
+            plt.plot(lsg, pdf_g, label="Gaussian, m = {:2.3f}, s = {:2.3f}".format(mg, sg), c='orange')
+
+            # laplace distr
+            Slaplace_r = np.sort(S[S > Sm])
+            Slaplace_l = Sm - Slaplace_r + Sm
+            Slaplace = np.append(Slaplace_r, Slaplace_l, axis=0)  # array must be symmentric with regard to Sm
+            ag, bg = stats.laplace.fit(Slaplace)
+            lsl = np.linspace(Sm, smax, len(Slaplace))
+            pdf_l = stats.laplace.pdf(lsl, ag, bg)
+            pdf_l = pdf_l / pdf_l.max() * l
+            plt.plot(lsl, pdf_l, label="Laplace, m = {:2.3f}, b = {:2.3f}".format(ag, bg), c='limegreen')
+
+            plt.legend()
+            plt.savefig(os.path.join('plots', 'dist_hist.png'))
+
         for idx, (img, txt, _, _) in enumerate(self.train_loader):
 
             img = torch.FloatTensor(img).cuda()
@@ -108,6 +173,26 @@ class JDSH:
             self.opt_T.step()
 
         self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, self.epoch_loss))
+
+    def get_S(self, F_I, txt):
+
+        F_I = F.normalize(F_I)
+        S_I = F_I.mm(F_I.t())
+        S_I = S_I * 2 - 1
+
+        F_T = F.normalize(txt)
+        S_T = F_T.mm(F_T.t())
+        S_T = S_T * 2 - 1
+
+        S_high = F.normalize(S_I).mm(F.normalize(S_T).t())
+        S = self.cfg.alpha * S_I + self.cfg.beta * S_T + self.cfg.lamb * (S_high + S_high.t()) / 2
+
+        # set diagonal to high numbers
+        y = torch.eye(len(S)).to(S.device) * 10000 + 1
+
+        S = S * y
+
+        return torch.reshape(S, (-1,))
 
     def eval(self):
 
@@ -238,10 +323,8 @@ class JDSH:
         left = self.cfg.LOC_LEFT - self.cfg.ALPHA * self.cfg.SCALE_LEFT
         right = self.cfg.LOC_RIGHT + self.cfg.BETA * self.cfg.SCALE_RIGHT
 
-        S_[S_ < left] = (1 + self.cfg.L1 * torch.exp(-(S_[S_ < left] - self.cfg.MIN))) \
-                        * S_[S_ < left]
-        S_[S_ > right] = (1 + self.cfg.L2 * torch.exp(S_[S_ > right] - self.cfg.MAX)) \
-                         * S_[S_ > right]
+        #S_[S_ < left] = (1 + self.cfg.L1 * torch.exp(-(S_[S_ < left] - self.cfg.MIN))) * S_[S_ < left]
+        #S_[S_ > right] = (1 + self.cfg.L2 * torch.exp(S_[S_ > right] - self.cfg.MAX)) * S_[S_ > right]
 
         S = S_ * self.cfg.mu
 
