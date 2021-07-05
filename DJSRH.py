@@ -4,7 +4,7 @@ import datasets
 import os.path as osp
 import os
 from models import ImgNet, TxtNet, ImgNetRS, TxtNetRS
-from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle, calc_map_rad, build_binary_hists, top_k_hists
+from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle, calc_map_rad, build_binary_hists, top_k_hists, retrieval2png
 import time
 
 
@@ -85,7 +85,7 @@ class DJSRH:
         self.ImgNet.set_alpha(epoch)
         self.TxtNet.set_alpha(epoch)
 
-        for idx, (img, txt, _, _) in enumerate(self.train_loader):
+        for idx, (img, txt, _, _, _) in enumerate(self.train_loader):
             img = torch.FloatTensor(img).cuda()
             txt = torch.FloatTensor(txt.numpy()).cuda()
 
@@ -115,15 +115,20 @@ class DJSRH:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT = generate_hashes_from_dataloader(self.database_loader,
-                                                                                   self.test_loader,
-                                                                                   self.ImgNet, self.TxtNet,
-                                                                                   self.cfg.LABEL_DIM)
-
+        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT, indexes = generate_hashes_from_dataloader(self.database_loader,
+                                                                                            self.test_loader,
+                                                                                            self.ImgNet, self.TxtNet,
+                                                                                            self.cfg.LABEL_DIM)
         qu_BI = self.get_each_5th_element(qu_BI)
         re_BI = self.get_each_5th_element(re_BI)
         qu_LI = self.get_each_5th_element(qu_LT)
         re_LI = self.get_each_5th_element(re_LT)
+
+        indexes = list(indexes)
+        indexes[0] = self.get_each_5th_element(indexes[0])
+        indexes[2] = self.get_each_5th_element(indexes[2])
+
+        self.visualize_retrieval(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, indexes, 'DJSRH')
 
         MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI,
                                                                        re_LT, self.cfg.MAP_K)
@@ -154,6 +159,16 @@ class DJSRH:
 
         # self.logger.info('Best MAP of I->T: %.3f, Best mAP of T->I: %.3f' % (self.best_it, self.best_ti))
         # self.logger.info('--------------------------------------------------------------------')
+
+    @staticmethod
+    def visualize_retrieval(qBX, qBY, rBX, rBY, qLX, qLY, rLX, rLY, indexes, epoch):
+
+        qIX, qIY, rIX, rIY = indexes
+
+        i2t = retrieval2png(qBX, rBY, qLX, rLY, qIX, rIY, tag='I2T', epoch=epoch)
+        t2i = retrieval2png(qBY, rBX, qLY, rLX, qIY, rIX, tag='T2I', epoch=epoch)
+        i2i = retrieval2png(qBX, rBX, qLX, rLX, qIX, rIX, tag='I2I', epoch=epoch)
+        t2t = retrieval2png(qBY, rBY, qLY, rLY, qIY, rIY, tag='T2T', epoch=epoch)
 
     @staticmethod
     def get_each_5th_element(arr):

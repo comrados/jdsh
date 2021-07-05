@@ -9,6 +9,9 @@ import pickle
 import matplotlib.pyplot as plt
 import os
 from args import cfg
+import random
+from PIL import Image
+import json
 
 
 def calc_hamming_dist(B1, B2):
@@ -83,12 +86,21 @@ def compress_wiki(train_loader, test_loader, modeli, modelt, train_dataset, test
     return re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L
 
 
-def generate_hashes_from_dataloader(train_loader, test_loader, model_I, model_T, label_dim):
+def generate_hashes_from_dataloader(db_loader, q_loader, model_I, model_T, label_dim):
+
+    def stack_idxs(idxs, idxs_batch):
+        if len(idxs) == 0:
+            return [ib for ib in idxs_batch]
+        else:
+            return [torch.hstack(i).detach() for i in zip(idxs, idxs_batch)]
+
     # response hashes / labels
     re_BI = list([])
     re_BT = list([])
     re_L = list([])
-    for _, (data_I, data_T, lab, _) in enumerate(train_loader):
+    db_dl_idxs = []
+    for _, (data_I, data_T, lab, _, db_sample_idxs) in enumerate(db_loader):
+        db_dl_idxs = stack_idxs(db_dl_idxs, db_sample_idxs)
         var_data_I = Variable(data_I.cuda())
         _, _, code_I = model_I(var_data_I)
         code_I = torch.sign(code_I)
@@ -105,7 +117,9 @@ def generate_hashes_from_dataloader(train_loader, test_loader, model_I, model_T,
     qu_BI = list([])
     qu_BT = list([])
     qu_L = list([])
-    for _, (data_I, data_T, lab, _) in enumerate(test_loader):
+    q_dl_idxs = []
+    for _, (data_I, data_T, lab, _, q_sample_idxs) in enumerate(q_loader):
+        q_dl_idxs = stack_idxs(q_dl_idxs, q_sample_idxs)
         var_data_I = Variable(data_I.cuda())
         _, _, code_I = model_I(var_data_I)
         code_I = torch.sign(code_I)
@@ -131,7 +145,7 @@ def generate_hashes_from_dataloader(train_loader, test_loader, model_I, model_T,
     if len(qu_L.shape) == 1:
         qu_L = F.one_hot(qu_L, num_classes=label_dim).float().cuda()
 
-    return re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L
+    return re_BI, re_BT, re_L, qu_BI, qu_BT, qu_L, (q_dl_idxs[0], q_dl_idxs[1], db_dl_idxs[0], db_dl_idxs[1])
 
 
 def calculate_hamming(B1, B2):
@@ -490,3 +504,177 @@ def top_k_hists(qBX, qBY, rBX, rBY, k=20, model=''):
         plot_top_k_hist(*d, ', '.join([tag, model, 'k: {}'.format(k), 'q/r: {}/{}'.format(d[-1], d[-1] * k)]), ax)
     plt.tight_layout()
     plt.savefig(os.path.join('plots', 'top_k_hists_' + model + '.png'))
+
+
+def read_json(file_name, suppress_console_info=False):
+    """
+    Read JSON
+
+    :param file_name: input JSON path
+    :param suppress_console_info: toggle console printing
+    :return: dictionary from JSON
+    """
+    with open(file_name, 'r') as f:
+        data = json.load(f)
+        if not suppress_console_info:
+            print("Read from:", file_name)
+    return data
+
+
+def get_image_file_names(data, suppress_console_info=False):
+    """
+    Get list of image file names
+
+    :param data: original data from JSON
+    :param suppress_console_info: toggle console printing
+    :return: list of strings (file names)
+    """
+
+    file_names = []
+    for img in data['images']:
+        file_names.append(img["filename"])
+    if not suppress_console_info:
+        print("Total number of files:", len(file_names))
+    return file_names
+
+
+def get_captions(data, suppress_console_info=False):
+    """
+    Get list of formatted captions
+
+    :param data: original data from JSON
+    :return: list of strings (captions)
+    """
+
+    def format_caption(string):
+        return string.replace('.', '').replace(',', '').replace('!', '').replace('?', '').lower()
+
+    captions = []
+    augmented_captions = []
+    for img in data['images']:
+        for sent in img['sentences']:
+            captions.append(format_caption(sent['raw']))
+            try:
+                augmented_captions.append(format_caption(sent['aug']))
+            except:
+                continue
+    if not suppress_console_info:
+        print("Total number of captions:", len(captions))
+        print("Total number of augmented captions:", len(augmented_captions))
+    return captions, augmented_captions
+
+
+def retrieval2png(qB, rB, qL, rL, qI, rI, k=10, tag='', epoch=0):
+    def get_retrieved_info(qB, rB, qL, rL, qI, rI, k):
+        random.seed(cfg.SEED)
+
+        i = random.choice(range(len(qB)))
+
+        ham_dist = calc_hamming_dist(qB[i, :], rB).squeeze().detach().cpu()
+        ham_dist_sorted, idxs = torch.sort(ham_dist)
+
+        ham_dist_sorted_k = ham_dist_sorted[:k].cpu().numpy()
+        idxs_k = idxs[:k].cpu().numpy()
+
+        q_idx = qI[i].cpu().numpy()
+        r_idxs = rI[idxs_k].cpu().numpy()
+        q_lab = np.argmax(qL[i].cpu().numpy())
+        r_labs = np.argmax(rL[idxs_k].cpu().numpy(), axis=1)
+
+        return ham_dist_sorted_k, q_idx, r_idxs, q_lab, r_labs
+
+    def load_img_txt():
+        data = read_json("/home/george/Code/uhnd/data/augmented_UCM.json", True)
+        file_names = get_image_file_names(data, True)
+        img_paths = [os.path.join("/home/george/Dropbox/UCM_Captions/images", i) for i in file_names]
+        captions, _ = get_captions(data, True)
+        return img_paths, captions
+
+    def get_retrieval_dict(img_paths, captions, q_idx, r_idxs, tag):
+        d = {'tag': tag}
+        if tag == 'I2T':
+            d['q'] = img_paths[q_idx]
+            d['r'] = [captions[i] for i in r_idxs]
+        elif tag == 'T2I':
+            d['q'] = captions[q_idx]
+            d['r'] = [img_paths[i] for i in r_idxs]
+        elif tag == 'I2I':
+            d['q'] = img_paths[q_idx]
+            d['r'] = [img_paths[i] for i in r_idxs]
+        elif tag == 'T2T':
+            d['q'] = captions[q_idx]
+            d['r'] = [captions[i] for i in r_idxs]
+        return d
+
+    def plot_retrieval(d, tag, epoch, q_lab, r_labs, qI, rI):
+
+        def set_spines_color_width(ax, color, width):
+            plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+            ax.spines['bottom'].set_color(color)
+            ax.spines['top'].set_color(color)
+            ax.spines['right'].set_color(color)
+            ax.spines['left'].set_color(color)
+            ax.spines['bottom'].set_linewidth(width)
+            ax.spines['top'].set_linewidth(width)
+            ax.spines['right'].set_linewidth(width)
+            ax.spines['left'].set_linewidth(width)
+
+        def get_q_rs():
+            if tag == 'I2T':
+                return Image.open(d['q']), d['r']
+            elif tag == 'T2I':
+                return d['q'], [Image.open(i) for i in d['r']]
+            elif tag == 'I2I':
+                return Image.open(d['q']), [Image.open(i) for i in d['r']]
+            elif tag == 'T2T':
+                return d['q'], d['r']
+
+        colors = ['green' if q_lab == r_lab else 'red' for r_lab in r_labs]
+
+        q, rs = get_q_rs()
+
+        # figure size
+        if tag.endswith('I'):
+            fig = plt.figure(figsize=((len(rs) + 1) * 3, 4))
+            subplots = len(rs) + 1
+        else:
+            fig = plt.figure(figsize=(15, 5))
+            subplots = 2
+
+        # plot query
+        ax = fig.add_subplot(1, subplots, 1)
+        ax.set_title('Query (idx:' + str(qI) + ')')
+        if tag.startswith('I'):
+            set_spines_color_width(ax, 'black', 3)
+            plt.imshow(q)
+        else:
+            ax.axis([0, len(rs), 0, len(rs)])
+            plt.axis('off')
+            ax.text(0, len(rs) // 2, '(idx:' + str(qI) + ') ' + q)
+
+        # plot responses
+        if tag.endswith('I'):
+            for i, r in enumerate(rs):
+                ax = fig.add_subplot(1, subplots, 2 + i)
+                ax.set_title('Response (idx:' + str(rI[i]) + ') ' + str(i + 1))
+                set_spines_color_width(ax, colors[i], 3)
+                plt.imshow(r)
+        else:
+            ax = fig.add_subplot(1, subplots, 2)
+            for i, r in enumerate(rs):
+                ax.axis([0, len(rs), 0, len(rs)])
+                plt.axis('off')
+                ax.text(0, i, '(idx:' + str(rI[i]) + ') ' + r, color=colors[i])
+
+        plt.tight_layout()
+        plt.savefig(os.path.join('plots', ''.join([tag, epoch, '.png'])))
+
+    ham_dist_sorted_k, q_idx, r_idxs, q_lab, r_labs = get_retrieved_info(qB, rB, qL, rL, qI, rI, k)
+    img_paths, captions = load_img_txt()
+
+    d = get_retrieval_dict(img_paths, captions, q_idx, r_idxs, tag)
+
+    plot_retrieval(d, tag, epoch, q_lab, r_labs, q_idx, r_idxs)
+
+    return d
+

@@ -32,12 +32,12 @@ if cfg.DATASET == "UCM":
 
 
     def split_ucm(images, captions, labels):
-        idx_train, idx_query, idx_db = get_split_idxs(len(images))
-        idx_train_cap, idx_query_cap, idx_db_cap = get_caption_idxs(idx_train, idx_query, idx_db)
+        idx_tr, idx_q, idx_db = get_split_idxs(len(images))
+        idx_tr_cap, idx_q_cap, idx_db_cap = get_caption_idxs(idx_tr, idx_q, idx_db)
 
-        train = images[idx_train], captions[idx_train_cap], labels[idx_train]
-        query = images[idx_query], captions[idx_query_cap], labels[idx_query]
-        db = images[idx_db], captions[idx_db_cap], labels[idx_db]
+        train = images[idx_tr], captions[idx_tr_cap], labels[idx_tr], (idx_tr, idx_tr_cap)
+        query = images[idx_q], captions[idx_q_cap], labels[idx_q], (idx_q, idx_q_cap)
+        db = images[idx_db], captions[idx_db_cap], labels[idx_db], (idx_db, idx_db_cap)
 
         return train, query, db
 
@@ -72,14 +72,12 @@ if cfg.DATASET == "UCM":
 
     def split_ucm_aug(images, captions, labels, captions_aug, images_aug):
 
-        idx_train, idx_query, idx_db = get_split_idxs(len(images))
-        idx_train_cap, idx_query_cap, idx_db_cap = get_caption_idxs(idx_train, idx_query, idx_db)
+        idx_tr, idx_q, idx_db = get_split_idxs(len(images))
+        idx_tr_cap, idx_q_cap, idx_db_cap = get_caption_idxs(idx_tr, idx_q, idx_db)
 
-        train = images[idx_train], captions[idx_train_cap], labels[idx_train], captions_aug[idx_train_cap], images_aug[
-            idx_train]
-        query = images[idx_query], captions[idx_query_cap], labels[idx_query], captions_aug[idx_query_cap], images_aug[
-            idx_query]
-        db = images[idx_db], captions[idx_db_cap], labels[idx_db], captions_aug[idx_db_cap], images_aug[idx_db]
+        train = images[idx_tr], captions[idx_tr_cap], labels[idx_tr], (idx_tr, idx_tr_cap), captions_aug[idx_tr_cap], images_aug[idx_tr]
+        query = images[idx_q], captions[idx_q_cap], labels[idx_q], (idx_q, idx_q_cap), captions_aug[idx_q_cap], images_aug[idx_q]
+        db = images[idx_db], captions[idx_db_cap], labels[idx_db], (idx_db, idx_db_cap), captions_aug[idx_db_cap], images_aug[idx_db]
 
         return train, query, db
 
@@ -130,11 +128,11 @@ if cfg.DATASET == "UCM":
         def __init__(self, type='train'):
 
             if type == 'train':
-                self.images, self.captions, self.labels = train
+                self.images, self.captions, self.labels, (self.idxs, self.idxs_cap) = train
             elif type == 'db':
-                self.images, self.captions, self.labels = db
+                self.images, self.captions, self.labels, (self.idxs, self.idxs_cap) = db
             elif type == 'query':
-                self.images, self.captions, self.labels = query
+                self.images, self.captions, self.labels, (self.idxs, self.idxs_cap) = query
             else:
                 raise Exception('wrong type')
 
@@ -161,7 +159,7 @@ if cfg.DATASET == "UCM":
             self.images, self.captions, self.labels = None, None, None
 
             if type == 'train':
-                i, c, l, ca, ia = train_aug
+                i, c, l, ca, (ix, ixc), ia = train_aug
                 self.images = np.vstack((i, ia))
                 self.labels = np.hstack((l, l))
 
@@ -170,9 +168,9 @@ if cfg.DATASET == "UCM":
                 ca = ca[cidx]
                 self.captions = np.vstack((c, ca))
             elif type == 'db':
-                self.images, self.captions, self.labels, _, _ = db_aug
+                self.images, self.captions, self.labels, (self.idxs, self.idxs_cap), _, _ = db_aug
             elif type == 'query':
-                self.images, self.captions, self.labels, _, _ = query_aug
+                self.images, self.captions, self.labels, (self.idxs, self.idxs_cap), _, _ = query_aug
             else:
                 raise Exception('wrong type')
 
@@ -202,7 +200,7 @@ if cfg.DATASET == "UCM":
             self.type = type
 
             if type == 'train':
-                self.images, self.captions, self.labels = train
+                self.images, self.captions, self.labels, (self.idxs, self.idxs_cap) = train
 
                 if data_amount == 'normal':
                     caption_indexes = self.randomly_select_caption_indexes_single()
@@ -210,10 +208,11 @@ if cfg.DATASET == "UCM":
                     caption_indexes = self.randomly_select_caption_indexes_double()
 
                 self.captions = self.captions[caption_indexes]
+                self.idxs_cap = np.array(self.idxs_cap)[caption_indexes]
             elif type == 'db':
-                self.images, self.captions, self.labels = db
+                self.images, self.captions, self.labels, (self.idxs, self.idxs_cap) = db
             elif type == 'query':
-                self.images, self.captions, self.labels = query
+                self.images, self.captions, self.labels, (self.idxs, self.idxs_cap) = query
             else:
                 raise Exception('wrong type')
 
@@ -223,7 +222,7 @@ if cfg.DATASET == "UCM":
             target = self.labels[idx_img]
             img = self.images[idx_img]
 
-            return img, txt, target, index
+            return img, txt, target, index, (self.idxs[idx_img], self.idxs_cap[idx_txt])
 
         def __len__(self):
             return len(self.captions)
