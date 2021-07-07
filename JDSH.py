@@ -5,7 +5,7 @@ import datasets
 import os.path as osp
 import os
 from models import ImgNet, TxtNet, ImgNetRS, TxtNetRS
-from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle, calc_map_rad, build_binary_hists, top_k_hists, retrieval2png
+from utils import generate_hashes_from_dataloader, calc_map_k, p_top_k, pr_curve, write_pickle, calc_map_rad, build_binary_hists, top_k_hists, retrieval2png, hr_hists
 import time
 
 import seaborn as sns
@@ -226,14 +226,17 @@ class JDSH:
 
         MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
 
-        maps50 = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG)
+        maps5 = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG)
+        maps10 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 10)
         maps20 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
         mapshr = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, [0, 1, 2, 3, 4, 5])
 
         top_k_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
+        hr_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
+
         build_binary_hists(qu_BI, qu_BT, re_BI, re_BT, 'JDSH', [i[0] for i in mapshr])
 
-        maps_eval = (maps50, maps20, mapshr)
+        maps_eval = (maps5, maps10, maps20, mapshr)
 
         if (self.best_it + self.best_ti + self.best_ii + self.best_tt) < (MAP_I2T + MAP_T2I + MAP_I2I + MAP_T2T):
             self.best_it = MAP_I2T

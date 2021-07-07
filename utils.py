@@ -463,7 +463,7 @@ def build_binary_hists(qBX, qBY, rBX, rBY, model, maps_r0):
     plt.savefig(os.path.join('plots', 'hists_' + model + '.png'))
 
 
-def top_k_hists(qBX, qBY, rBX, rBY, k=20, model=''):
+def top_k_hists(qBX, qBY, rBX, rBY, k=10, model=''):
     def top_k_hist_data(qB, rB, k):
         n = len(qB)
         d = {}
@@ -485,7 +485,19 @@ def top_k_hists(qBX, qBY, rBX, rBY, k=20, model=''):
         return x, y, n
 
     def plot_top_k_hist(x, y, n, tag, ax):
-        ax.bar(x, y, width=1)
+        rects = ax.bar(x, y, width=1)
+        try:
+            scale = max([rect.get_height() for rect in rects])
+        except:
+            scale = 100
+        for rect in rects:
+            h = rect.get_height()
+            if h < scale * 0.1:
+                txt_offset = int(scale * 0.05)
+            else:
+                txt_offset = - int(scale * 0.05)
+            ax.annotate('Mean: {:.1f}'.format(h / n), xy=(rect.get_x() + rect.get_width() / 2 - 0.25, h + txt_offset),
+                        weight='bold', color='red')
         plt.title(tag.upper(), size=20, weight='medium')
         plt.grid(axis='y')
         ax.set_xticks(x)
@@ -564,7 +576,7 @@ def get_captions(data, suppress_console_info=False):
     return captions, augmented_captions
 
 
-def retrieval2png(qB, rB, qL, rL, qI, rI, k=10, tag='', epoch=0):
+def retrieval2png(qB, rB, qL, rL, qI, rI, k=5, tag='', epoch=0):
     def get_retrieved_info(qB, rB, qL, rL, qI, rI, k):
         random.seed(cfg.SEED)
 
@@ -635,10 +647,10 @@ def retrieval2png(qB, rB, qL, rL, qI, rI, k=10, tag='', epoch=0):
 
         # figure size
         if tag.endswith('I'):
-            fig = plt.figure(figsize=((len(rs) + 1) * 3, 4))
+            fig = plt.figure(figsize=((len(rs) + 1) * 2.5, 4))
             subplots = len(rs) + 1
         else:
-            fig = plt.figure(figsize=(15, 5))
+            fig = plt.figure(figsize=(12, 4))
             subplots = 2
 
         # plot query
@@ -678,3 +690,64 @@ def retrieval2png(qB, rB, qL, rL, qI, rI, k=10, tag='', epoch=0):
 
     return d
 
+
+def hr_hists(qBX, qBY, rBX, rBY, k=50, model=''):
+
+    def hr_hist_data(qB, rB, k):
+        n = len(qB)
+        dicts = []
+        max_hr = 0
+        for i in range(n):
+
+            ham_dist = calc_hamming_dist(qB[i, :], rB).squeeze().detach().cpu()
+            ham_dist_sorted, idxs = torch.sort(ham_dist)
+
+            ham_dist_sorted_k = ham_dist_sorted[:k].cpu().numpy()
+            values, counts = np.unique(ham_dist_sorted_k, return_counts=True)
+
+            temp_d = {}
+
+            for v, c in zip(values, counts):
+                temp_d[int(v)] = c
+                if v > max_hr:
+                    max_hr = int(v)
+            dicts.append(temp_d)
+
+        hr_list = []
+        for hr in range(max_hr + 1):
+            hr_list_temp = []
+            for d in dicts:
+                if hr in d.keys():
+                    hr_list_temp.append(d[hr])
+                else:
+                    hr_list_temp.append(0)
+            hr_list.append(np.array(hr_list_temp))
+
+        return hr_list
+
+    def plot_hr_hist(ds, tag, ax):
+        bars = range(len(ds[0]))
+        offsets = np.zeros(len(ds[0]))
+        for i, d in enumerate(ds):
+            ax.bar(bars, d, bottom=offsets, width=1, label=str(i))
+            offsets = offsets + d
+        plt.title(tag.upper(), size=20, weight='medium')
+        ax.legend(title='HR', bbox_to_anchor=(1, 1), loc='upper left')
+        ax.set_xlabel('samples')
+        ax.set_ylabel('K')
+        plt.grid(axis='y')
+
+    i2t = hr_hist_data(qBX, rBY, k)
+    t2i = hr_hist_data(qBY, rBX, k)
+    i2i = hr_hist_data(qBX, rBX, k)
+    t2t = hr_hist_data(qBY, rBY, k)
+
+    data = [i2t, t2i, i2i, t2t]
+    tags = ['i2t', 't2i', 'i2i', 't2t']
+
+    fig = plt.figure(figsize=(16, 8))
+    for i, (tag, d) in enumerate(zip(tags, data)):
+        ax = fig.add_subplot(2, 2, i + 1)
+        plot_hr_hist(d, ', '.join([tag, model, 'k: {}'.format(k)]), ax)
+    plt.tight_layout()
+    plt.savefig(os.path.join('plots', 'hr_hists_' + model + '.png'))
