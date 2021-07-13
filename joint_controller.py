@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 
-class JDSH:
+class JointController:
     def __init__(self, log, cfg):
         self.since = time.time()
         self.logger = log
@@ -36,7 +36,7 @@ class JDSH:
             self.test_dataset = datasets.NUSWIDE(train=False, database=False, transform=datasets.nus_test_transform)
             self.database_dataset = datasets.NUSWIDE(train=False, database=True, transform=datasets.nus_test_transform)
 
-        if self.cfg.DATASET == "UCM":
+        if self.cfg.DATASET == "UCM" or "RSICD":
             da = self.cfg.DATA_AMOUNT
             self.train_dataset = datasets.UCM2(type='train', data_amount=da)
             self.test_dataset = datasets.UCM2(type='query', data_amount=da)
@@ -59,7 +59,7 @@ class JDSH:
                                                            shuffle=False,
                                                            num_workers=self.cfg.NUM_WORKERS)
 
-        if self.cfg.DATASET == "UCM":
+        if self.cfg.DATASET == "UCM" or "RSICD":
             txt_feat_len = datasets.txt_feat_len
             img_feat_len = datasets.img_feat_len
 
@@ -81,6 +81,12 @@ class JDSH:
         self.best_tt = 0
 
     def train(self, epoch):
+        if self.cfg.MODEL == "DJSRH":
+            self.train_djsrh(epoch)
+        else:
+            self.train_jdsh(epoch)
+
+    def train_jdsh(self, epoch):
 
         self.epoch_loss = 0.
 
@@ -161,9 +167,9 @@ class JDSH:
             F_I, hid_I, code_I = self.ImgNet(img)
             code_T = self.TxtNet(txt)
 
-            S = self.cal_similarity_matrix(F_I, txt)
+            S = self.cal_similarity_matrix_jdsh(F_I, txt)
 
-            loss = self.cal_loss(code_I, code_T, S)
+            loss = self.cal_loss_jdsh(code_I, code_T, S)
 
             self.epoch_loss += loss.detach().cpu().numpy()
 
@@ -199,6 +205,70 @@ class JDSH:
 
         return torch.reshape(S, (-1,))
 
+    def train_djsrh(self, epoch):
+        self.epoch_loss = 0.
+
+        self.ImgNet.cuda().train()
+        self.TxtNet.cuda().train()
+
+        self.ImgNet.set_alpha(epoch)
+        self.TxtNet.set_alpha(epoch)
+
+        for idx, (img, txt, _, _, _) in enumerate(self.train_loader):
+            img = torch.FloatTensor(img).cuda()
+            txt = torch.FloatTensor(txt.numpy()).cuda()
+
+            self.opt_I.zero_grad()
+            self.opt_T.zero_grad()
+
+            F_I, hid_I, code_I = self.ImgNet(img)
+            code_T = self.TxtNet(txt)
+
+            S = self.cal_similarity_matrix_djsrh(F_I, txt)
+
+            loss = self.cal_loss_djsrh(code_I, code_T, S)
+
+            self.epoch_loss += loss.detach().cpu().numpy()
+
+            loss.backward()
+
+            self.opt_I.step()
+            self.opt_T.step()
+
+        self.logger.info('Epoch [%d/%d], Epoch Loss: %.4f' % (epoch + 1, self.cfg.NUM_EPOCH, self.epoch_loss))
+
+    def cal_similarity_matrix_djsrh(self, F_I, txt):
+
+        F_I = F.normalize(F_I)
+        S_I = F_I.mm(F_I.t())
+        S_I = S_I * 2 - 1
+
+        F_T = F.normalize(txt)
+        S_T = F_T.mm(F_T.t())
+        S_T = S_T * 2 - 1
+
+        S_tilde = self.cfg.BETA * S_I + (1 - self.cfg.BETA) * S_T
+        S = (1 - self.cfg.ETA) * S_tilde + self.cfg.ETA * S_tilde.mm(S_tilde.t()) / self.cfg.BATCH_SIZE
+        S = S * self.cfg.MU
+
+        return S
+
+    def cal_loss_djsrh(self, code_I, code_T, S):
+
+        B_I = F.normalize(code_I, dim=1)
+        B_T = F.normalize(code_T, dim=1)
+
+        BI_BI = B_I.mm(B_I.t())
+        BT_BT = B_T.mm(B_T.t())
+        BI_BT = B_I.mm(B_T.t())
+
+        loss1 = F.mse_loss(BI_BI, S)
+        loss2 = F.mse_loss(BI_BT, S)
+        loss3 = F.mse_loss(BT_BT, S)
+        loss = self.cfg.LAMBDA1 * loss1 + 1 * loss2 + self.cfg.LAMBDA2 * loss3
+
+        return loss
+
     def eval(self):
 
         # self.logger.info('--------------------Evaluation: mAP@50-------------------')
@@ -219,7 +289,7 @@ class JDSH:
         indexes[0] = self.get_each_5th_element(indexes[0])
         indexes[2] = self.get_each_5th_element(indexes[2])
 
-        self.visualize_retrieval(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, indexes, 'JDSH')
+
 
         MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI,
                                                                        re_LT, self.cfg.MAP_K)
@@ -231,10 +301,11 @@ class JDSH:
         maps20 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
         mapshr = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, [0, 1, 2, 3, 4, 5])
 
-        top_k_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
-        hr_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
-
-        build_binary_hists(qu_BI, qu_BT, re_BI, re_BT, 'JDSH', [i[0] for i in mapshr])
+        if self.cfg.DRAW_PLOTS:
+            self.visualize_retrieval(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, indexes, 'JDSH')
+            top_k_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
+            hr_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
+            build_binary_hists(qu_BI, qu_BT, re_BI, re_BT, 'JDSH', [i[0] for i in mapshr])
 
         maps_eval = (maps5, maps10, maps20, mapshr)
 
@@ -326,7 +397,7 @@ class JDSH:
         write_pickle(osp.join(self.cfg.MODEL_DIR, self.path, 'pk_dict.pkl'), pk_dict)
         write_pickle(osp.join(self.cfg.MODEL_DIR, self.path, 'map_dict.pkl'), map_dict)
 
-    def cal_similarity_matrix(self, F_I, txt):
+    def cal_similarity_matrix_jdsh(self, F_I, txt):
 
         F_I = F.normalize(F_I)
         S_I = F_I.mm(F_I.t())
@@ -353,7 +424,7 @@ class JDSH:
 
         return S
 
-    def cal_loss(self, code_I, code_T, S):
+    def cal_loss_jdsh(self, code_I, code_T, S):
 
         B_I = F.normalize(code_I, dim=1)
         B_T = F.normalize(code_T, dim=1)

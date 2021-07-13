@@ -7,7 +7,7 @@ from torchvision import transforms
 import h5py
 import random
 
-if cfg.DATASET == "UCM":
+if cfg.DATASET == "UCM" or "RSICD":
 
     def load_ucm_train_query_db():
         random.seed(cfg.SEED)
