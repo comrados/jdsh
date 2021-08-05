@@ -6,29 +6,57 @@ import scipy.io as scio
 from torchvision import transforms
 import h5py
 import random
+from utils import select_idxs, read_hdf5, read_json, get_labels
 
-if cfg.DATASET == "UCM" or "RSICD":
+if cfg.DATASET in ["UCM", "RSICD"]:
+
+    dataset = cfg.DATASET
+
+    if cfg.TAG.lower() in ['img_aug_center', 'baseline', 'img_aug_center_txt_rb']:
+        image_emb_for_model = "./dataset/image_emb_{}_aug_center_crop_only.h5".format(dataset.upper())
+        caption_emb_for_model = "./dataset/caption_emb_{}_aug.h5".format(dataset.upper())
+
+        image_emb_aug_for_model = "./dataset/image_emb_{}_aug_aug_center.h5".format(dataset.upper())
+        caption_emb_aug_for_model = "./dataset/caption_emb_{}_aug_rb.h5".format(dataset.upper())
+
+        dataset_json_for_model = "./dataset/augmented_{}.json".format(dataset.upper())
+    elif cfg.TAG.lower() == 'img_aug_center_txt_bt_chain':
+        image_emb_for_model = "./dataset/image_emb_{}_aug_center_crop_only.h5".format(dataset.upper())
+        caption_emb_for_model = "./dataset/caption_emb_{}_aug.h5".format(dataset.upper())
+
+        image_emb_aug_for_model = "./dataset/image_emb_{}_aug_aug_center.h5".format(dataset.upper())
+        caption_emb_aug_for_model = "./dataset/caption_emb_{}_aug_bt_chain.h5".format(dataset.upper())
+
+        dataset_json_for_model = "./dataset/augmented_{}.json".format(dataset.upper())
+    else:
+        raise Exception("Tag {} doesn't exist, check 'datasets.py'".format(cfg.TAG))
+
+
+    def load_dataset(aug=False):
+        """
+        Load dataset
+
+        :return: images and captions embeddings, labels
+        """
+        images = read_hdf5(image_emb_for_model, 'image_emb', normalize=True)
+        captions = read_hdf5(caption_emb_for_model, 'caption_emb', normalize=True)
+        labels = np.array(get_labels(read_json(dataset_json_for_model), suppress_console_info=True))
+
+        if aug:
+            captions_aug = read_hdf5(caption_emb_aug_for_model, 'caption_emb', normalize=True)
+            images_aug = read_hdf5(image_emb_aug_for_model, 'image_emb', normalize=True)
+            return images, captions, labels, captions_aug, images_aug
+        else:
+            return images, captions, labels
+
 
     def load_ucm_train_query_db():
         random.seed(cfg.SEED)
-        images, captions, labels = load_ucm()
+        images, captions, labels = load_dataset()
 
         train, query, db = split_ucm(images, captions, labels)
 
         return train, query, db
-
-
-    def load_ucm():
-        with h5py.File(cfg.DATASET_PATH, "r") as hf:
-            images = hf['image_emb'][:]
-            images = (images - images.mean()) / images.std()
-
-            captions = hf['caption_emb'][:]
-            captions = (captions - captions.mean()) / captions.std()
-
-            labels = hf['classcodes'][:]
-
-        return images, captions, labels
 
 
     def split_ucm(images, captions, labels):
@@ -44,7 +72,7 @@ if cfg.DATASET == "UCM" or "RSICD":
 
     def load_ucm_train_query_db_aug():
         random.seed(cfg.SEED)
-        images, captions, labels, captions_aug, images_aug = load_ucm_aug()
+        images, captions, labels, captions_aug, images_aug = load_dataset(True)
 
         train, query, db = split_ucm_aug(images, captions, labels, captions_aug, images_aug)
 
@@ -153,24 +181,30 @@ if cfg.DATASET == "UCM" or "RSICD":
             return index // 5, index
 
 
-    class UCMAug(torch.utils.data.Dataset):
+    class RSDSaug(torch.utils.data.Dataset):
 
         def __init__(self, type='train'):
             self.images, self.captions, self.labels = None, None, None
 
             if type == 'train':
-                i, c, l, ca, (ix, ixc), ia = train_aug
+                i, c, l, (ix, ixc), ca, ia = train_aug
                 self.images = np.vstack((i, ia))
                 self.labels = np.hstack((l, l))
+                self.idxs = np.hstack((np.array(ix), np.array(ix)))
 
-                cidx = self.randomly_select_caption_indexes()
+                cidx = select_idxs(len(c), 1, 5, seed=cfg.SEED)[0]
                 c = c[cidx]
                 ca = ca[cidx]
+                self.idxs_cap = np.hstack((np.array(ixc)[cidx], np.array(ixc)[cidx]))
                 self.captions = np.vstack((c, ca))
             elif type == 'db':
                 self.images, self.captions, self.labels, (self.idxs, self.idxs_cap), _, _ = db_aug
+                caption_idxs = select_idxs(len(self.captions), 1, 5, seed=cfg.SEED)[0]
+                self.captions = self.captions[caption_idxs]
             elif type == 'query':
                 self.images, self.captions, self.labels, (self.idxs, self.idxs_cap), _, _ = query_aug
+                caption_idxs = select_idxs(len(self.captions), 1, 5, seed=cfg.SEED)[0]
+                self.captions = self.captions[caption_idxs]
             else:
                 raise Exception('wrong type')
 
@@ -180,7 +214,7 @@ if cfg.DATASET == "UCM" or "RSICD":
             target = self.labels[index]
             img = self.images[index]
 
-            return img, txt, target, index
+            return img, txt, target, index, (self.idxs[index], self.idxs_cap[index])
 
         def __len__(self):
             return len(self.images)
@@ -194,7 +228,7 @@ if cfg.DATASET == "UCM" or "RSICD":
             return idxs
 
 
-    class UCM2(torch.utils.data.Dataset):
+    class RSDS(torch.utils.data.Dataset):
 
         def __init__(self, type='train', data_amount='normal'):
             self.type = type
@@ -211,8 +245,14 @@ if cfg.DATASET == "UCM" or "RSICD":
                 self.idxs_cap = np.array(self.idxs_cap)[caption_indexes]
             elif type == 'db':
                 self.images, self.captions, self.labels, (self.idxs, self.idxs_cap) = db
+
+                caption_idxs = select_idxs(len(self.captions), 1, 5, seed=cfg.SEED)[0]
+                self.captions = self.captions[caption_idxs]
             elif type == 'query':
                 self.images, self.captions, self.labels, (self.idxs, self.idxs_cap) = query
+
+                caption_idxs = select_idxs(len(self.captions), 1, 5, seed=cfg.SEED)[0]
+                self.captions = self.captions[caption_idxs]
             else:
                 raise Exception('wrong type')
 

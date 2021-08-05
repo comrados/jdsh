@@ -7,7 +7,8 @@ def main():
     # log
     log = logger()
     mode = 'TEST' if cfg.TEST else 'TRAIN'
-    log.info('Initialization: {}, {}, {} bits, {}'.format(cfg.MODEL, cfg.DATASET, cfg.HASH_BIT, mode))
+    s = 'Init ({}): {}, {}, {} bits, tag: {}, preset: {}'
+    log.info(s.format(mode, cfg.MODEL, cfg.DATASET, cfg.HASH_BIT, cfg.TAG.lower(), cfg.DATA_AMOUNT))
 
     model = JointController(log, cfg)
 

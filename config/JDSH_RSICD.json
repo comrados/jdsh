@@ -20,6 +20,7 @@
   "TXT_DIR": "dataset/dataset_UCM.h5",
   "IMG_DIR": "dataset/dataset_UCM.h5",
   "DATASET_PATH": "dataset/dataset_RSICD_aug_captions_images.h5",
+  "TAG": "default",
   "DATASET_QUERY_SPLIT": 0.2,
   "DATASET_TRAIN_SPLIT": 0.5,
   "MAP_K": 5,

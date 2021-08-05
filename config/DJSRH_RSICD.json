@@ -1,11 +1,11 @@
 {
-  "BETA": 0.1,
-  "LAMBDA1": 0.75,
-  "LAMBDA2": 0.75,
+  "BETA": 0.6,
+  "LAMBDA1": 0.1,
+  "LAMBDA2": 0.1,
   "MU": 1.1,
   "ETA": 0.1,
-  "LR_IMG": 0.1,
-  "LR_TXT": 0.1,
+  "LR_IMG": 0.001,
+  "LR_TXT": 0.01,
 
   "LABEL_DIR": "dataset/dataset_UCM.h5",
   "TXT_DIR": "dataset/dataset_UCM.h5",

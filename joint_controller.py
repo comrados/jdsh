@@ -19,7 +19,7 @@ class JointController:
         self.logger = log
         self.cfg = cfg
         self.epoch_loss = 0.
-        self.path = "_".join([self.cfg.MODEL, str(self.cfg.HASH_BIT), self.cfg.DATASET, self.cfg.TAG])
+        self.path = "_".join([self.cfg.MODEL, str(self.cfg.HASH_BIT), self.cfg.DATASET, self.cfg.TAG, self.cfg.DATA_AMOUNT.upper()])
 
         torch.manual_seed(1)
         torch.cuda.manual_seed_all(1)
@@ -38,9 +38,14 @@ class JointController:
 
         if self.cfg.DATASET == "UCM" or "RSICD":
             da = self.cfg.DATA_AMOUNT
-            self.train_dataset = datasets.UCM2(type='train', data_amount=da)
-            self.test_dataset = datasets.UCM2(type='query', data_amount=da)
-            self.database_dataset = datasets.UCM2(type='db', data_amount=da)
+            if da == 'aug':
+                self.train_dataset = datasets.RSDSaug(type='train')
+                self.test_dataset = datasets.RSDSaug(type='query')
+                self.database_dataset = datasets.RSDSaug(type='db')
+            else:
+                self.train_dataset = datasets.RSDS(type='train', data_amount=da)
+                self.test_dataset = datasets.RSDS(type='query')
+                self.database_dataset = datasets.RSDS(type='db')
 
         # Data Loader (Input Pipeline)
         self.train_loader = torch.utils.data.DataLoader(dataset=self.train_dataset,
@@ -280,14 +285,15 @@ class JointController:
                                                                                             self.test_loader,
                                                                                             self.ImgNet, self.TxtNet,
                                                                                             self.cfg.LABEL_DIM)
-        qu_BI = self.get_each_5th_element(qu_BI)
-        re_BI = self.get_each_5th_element(re_BI)
-        qu_LI = self.get_each_5th_element(qu_LT)
-        re_LI = self.get_each_5th_element(re_LT)
 
-        indexes = list(indexes)
-        indexes[0] = self.get_each_5th_element(indexes[0])
-        indexes[2] = self.get_each_5th_element(indexes[2])
+        # qu_BI = self.get_each_5th_element(qu_BI)
+        # re_BI = self.get_each_5th_element(re_BI)
+        qu_LI = qu_LT  # self.get_each_5th_element(qu_LT)
+        re_LI = re_LT  # self.get_each_5th_element(re_LT)
+
+        #indexes = list(indexes)
+        #indexes[0] = self.get_each_5th_element(indexes[0])
+        #indexes[2] = self.get_each_5th_element(indexes[2])
 
 
 
@@ -300,6 +306,7 @@ class JointController:
         maps10 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 10)
         maps20 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
         mapshr = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, [0, 1, 2, 3, 4, 5])
+        p_at_k = self.calc_p_top_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT)
 
         if self.cfg.DRAW_PLOTS:
             self.visualize_retrieval(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, indexes, 'JDSH')
@@ -307,7 +314,7 @@ class JointController:
             hr_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
             build_binary_hists(qu_BI, qu_BT, re_BI, re_BT, 'JDSH', [i[0] for i in mapshr])
 
-        maps_eval = (maps5, maps10, maps20, mapshr)
+        maps_eval = (maps5, maps10, maps20, mapshr, p_at_k)
 
         if (self.best_it + self.best_ti + self.best_ii + self.best_tt) < (MAP_I2T + MAP_T2I + MAP_I2I + MAP_T2T):
             self.best_it = MAP_I2T
@@ -531,3 +538,35 @@ class JointController:
             self.logger.info(s.format(r, mapsi2t[r], mapst2i[r], mapsi2i[r], mapst2t[r]))
 
         return mapsi2t, mapst2i, mapsi2i, mapst2t
+
+    def calc_p_top_k(self, qBX, qBY, rBX, rBY, qLX, qLY, rLX, rLY):
+        """
+        Calculate P@K values
+
+        :param: qBX: query hashes, modality X
+        :param: qBY: query hashes, modality Y
+        :param: rBX: response hashes, modality X
+        :param: rBY: response hashes, modality Y
+        :param: qLX: query labels, modality X
+        :param: qLY: query labels, modality Y
+        :param: rLX: response labels, modality X
+        :param: rLY: response labels, modality Y
+
+        :returns: P@K values
+        """
+        k = [1, 5, 10, 20, 50] + list(range(100, 1001, 100))
+
+        pk_i2t = p_top_k(qBX, rBY, qLX, rLY, k, tqdm_label='I2T').detach().cpu().numpy()
+        pk_t2i = p_top_k(qBY, rBX, qLY, rLX, k, tqdm_label='T2I').detach().cpu().numpy()
+        pk_i2i = p_top_k(qBX, rBX, qLX, rLX, k, tqdm_label='I2I').detach().cpu().numpy()
+        pk_t2t = p_top_k(qBY, rBY, qLY, rLY, k, tqdm_label='T2T').detach().cpu().numpy()
+
+        pk_dict = {'k': k,
+                   'pki2t': list(pk_i2t),
+                   'pkt2i': list(pk_t2i),
+                   'pki2i': list(pk_i2i),
+                   'pkt2t': list(pk_t2t)}
+
+        self.logger.info('P@K values: {}'.format(pk_dict))
+
+        return pk_dict

@@ -12,6 +12,57 @@ from args import cfg
 import random
 from PIL import Image
 import json
+import h5py
+
+
+def read_hdf5(file_name, dataset_name, normalize=False):
+    with h5py.File(file_name, 'r') as hf:
+        print("Read from:", file_name)
+        data = hf[dataset_name][:]
+        if normalize:
+            data = (data - data.mean()) / data.std()
+        return data
+
+
+def get_labels(data, suppress_console_info=False):
+    labels = []
+    for img in data['images']:
+        labels.append(img["classcode"])
+    if not suppress_console_info:
+        print("Total number of labels:", len(labels))
+    return labels
+
+
+def get_captions(data, suppress_console_info=False):
+
+    def format_caption(string):
+        return string.replace('.', '').replace(',', '').replace('!', '').replace('?', '').lower()
+
+    captions = []
+    augmented_captions_rb = []
+    augmented_captions_bt_prob = []
+    augmented_captions_bt_chain = []
+    for img in data['images']:
+        for sent in img['sentences']:
+            captions.append(format_caption(sent['raw']))
+            try:
+                augmented_captions_rb.append(format_caption(sent['aug_rb']))
+            except:
+                pass
+            try:
+                augmented_captions_bt_prob.append(format_caption(sent['aug_bt_prob']))
+            except:
+                pass
+            try:
+                augmented_captions_bt_chain.append(format_caption(sent['aug_bt_chain']))
+            except:
+                pass
+    if not suppress_console_info:
+        print("Total number of captions:", len(captions))
+        print("Total number of augmented captions RB:", len(augmented_captions_rb))
+        print("Total number of augmented captions BT (prob):", len(augmented_captions_bt_prob))
+        print("Total number of augmented captions BT (chain):", len(augmented_captions_bt_chain))
+    return captions, augmented_captions_rb, augmented_captions_bt_prob, augmented_captions_bt_chain
 
 
 def calc_hamming_dist(B1, B2):
@@ -87,7 +138,6 @@ def compress_wiki(train_loader, test_loader, modeli, modelt, train_dataset, test
 
 
 def generate_hashes_from_dataloader(db_loader, q_loader, model_I, model_T, label_dim):
-
     def stack_idxs(idxs, idxs_batch):
         if len(idxs) == 0:
             return [ib for ib in idxs_batch]
@@ -335,7 +385,7 @@ def pr_curve(qB, rB, query_label, retrieval_label, tqdm_label=''):
                                  rB)  # hamming distances from qB[i, :] (current query sample) to retrieval samples
         # tmp[k,j] == 1 if hamming distance to retrieval sample j is less or equal to k (distance), 0 otherwise
         tmp = (hamm <= torch.arange(0, num_bit + 1).reshape(-1, 1).float().to(hamm.device)).float()
-        # total (TP + FP): total[k] is count of distances less or equal to k (from current query sample to retrieval samples)
+        # total (TP + FP): total[k] is count of distances less or equal to k (from current sample to retrieval samples)
         total = tmp.sum(dim=-1)
         total = total + (total == 0).float() * 0.0001  # replace zeros with 0.1 to avoid division by zero
         # select only same class samples from tmp (ground truth masking, only rows where gnd == 1 proceed further)
@@ -692,7 +742,6 @@ def retrieval2png(qB, rB, qL, rL, qI, rI, k=5, tag='', epoch=0):
 
 
 def hr_hists(qBX, qBY, rBX, rBY, k=50, model=''):
-
     def hr_hist_data(qB, rB, k):
         n = len(qB)
         dicts = []
@@ -751,3 +800,34 @@ def hr_hists(qBX, qBY, rBX, rBY, k=50, model=''):
         plot_hr_hist(d, ', '.join([tag, model, 'k: {}'.format(k)]), ax)
     plt.tight_layout()
     plt.savefig(os.path.join('plots', 'hr_hists_' + model + '.png'))
+
+
+def select_idxs(seq_length, n_to_select, n_from_select, seed=42):
+    """
+    Select n_to_select indexes from each consequent n_from_select indexes from range with length seq_length, split
+    selected indexes to separate arrays
+
+    input, range of length seq_length:
+    range = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+    sequences of length n_from_select:
+    sequences = [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19]]
+
+    selected n_to_select elements from each sequence
+    selected = [[0, 4], [7, 9], [13, 14], [16, 18]]
+
+    output, n_to_select lists of length seq_length / n_from_select:
+    output = [[0, 7, 13, 16], [4, 9, 14, 18]]
+
+    :param seq_length: length of sequence, say 10
+    :param n_to_select: number of elements to select
+    :param n_from_select: number of consequent elements
+    :return:
+    """
+    random.seed(seed)
+    idxs = [[] for _ in range(n_to_select)]
+    for i in range(seq_length // n_from_select):
+        ints = random.sample(range(n_from_select), n_to_select)
+        for j in range(n_to_select):
+            idxs[j].append(i * n_from_select + ints[j])
+    return idxs
