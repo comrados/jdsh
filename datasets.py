@@ -12,7 +12,7 @@ if cfg.DATASET in ["UCM", "RSICD"]:
 
     dataset = cfg.DATASET
 
-    if cfg.TAG.lower() in ['img_aug_center', 'baseline', 'img_aug_center_txt_rb']:
+    if cfg.TAG.lower() in ['img_aug_center', 'baseline', 'img_aug_center_txt_rb', 'default']:
         image_emb_for_model = "./dataset/image_emb_{}_aug_center_crop_only.h5".format(dataset.upper())
         caption_emb_for_model = "./dataset/caption_emb_{}_aug.h5".format(dataset.upper())
 
