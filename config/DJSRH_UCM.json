@@ -1,10 +1,10 @@
 {
-  "BETA": 0.6,
+  "BETA": 0.9,
   "LAMBDA1": 0.1,
   "LAMBDA2": 0.1,
   "MU": 1.5,
   "ETA": 0.4,
-  "LR_IMG": 0.001,
+  "LR_IMG": 0.01,
   "LR_TXT": 0.01,
 
   "LABEL_DIR": "dataset/dataset_UCM.h5",
@@ -27,7 +27,7 @@
   "NUM_WORKERS": 8,
   "EPOCH_INTERVAL": 1,
   "NUM_EPOCH": 300,
-  "EVAL_INTERVAL": 300,
+  "EVAL_INTERVAL": 100,
   "MODEL_DIR": "./checkpoints",
   "CHECKPOINT": "UCM.pth"
 }

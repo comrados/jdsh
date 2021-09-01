@@ -1,5 +1,5 @@
 {
-  "alpha": 0.4,
+  "alpha": 0.5,
   "beta": 0.3,
   "lamb": 0.3,
   "mu": 1.5,
@@ -35,8 +35,8 @@
   "GPU_ID": 0,
   "NUM_WORKERS": 8,
   "EPOCH_INTERVAL": 1,
-  "NUM_EPOCH": 300,
-  "EVAL_INTERVAL": 300,
+  "NUM_EPOCH": 200,
+  "EVAL_INTERVAL": 100,
   "MODEL_DIR": "./checkpoints",
   "CHECKPOINT": "UCM.pth"
 }

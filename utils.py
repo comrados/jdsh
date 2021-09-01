@@ -626,11 +626,12 @@ def get_captions(data, suppress_console_info=False):
     return captions, augmented_captions
 
 
-def retrieval2png(qB, rB, qL, rL, qI, rI, k=5, tag='', epoch=0):
-    def get_retrieved_info(qB, rB, qL, rL, qI, rI, k):
-        random.seed(cfg.SEED)
+def retrieval2png(cfg_params, qB, rB, qL, rL, qI, rI, k=20, tag='', file_tag='UNHD'):
+    print('Visualizing retrieval for:', tag)
 
-        i = random.choice(range(len(qB)))
+    def get_retrieved_info(qB, rB, qL, rL, qI, rI, k):
+
+        i = 50
 
         ham_dist = calc_hamming_dist(qB[i, :], rB).squeeze().detach().cpu()
         ham_dist_sorted, idxs = torch.sort(ham_dist)
@@ -646,29 +647,28 @@ def retrieval2png(qB, rB, qL, rL, qI, rI, k=5, tag='', epoch=0):
         return ham_dist_sorted_k, q_idx, r_idxs, q_lab, r_labs
 
     def load_img_txt():
-        data = read_json("/home/george/Code/uhnd/data/augmented_UCM.json", True)
+        data = read_json(cfg_params[1], True)
         file_names = get_image_file_names(data, True)
-        img_paths = [os.path.join("/home/george/Dropbox/UCM_Captions/images", i) for i in file_names]
+        img_paths = [os.path.join(cfg_params[2], i) for i in file_names]
         captions, _ = get_captions(data, True)
         return img_paths, captions
 
     def get_retrieval_dict(img_paths, captions, q_idx, r_idxs, tag):
         d = {'tag': tag}
-        if tag == 'I2T':
+        if tag.startswith('I'):
             d['q'] = img_paths[q_idx]
-            d['r'] = [captions[i] for i in r_idxs]
-        elif tag == 'T2I':
-            d['q'] = captions[q_idx]
-            d['r'] = [img_paths[i] for i in r_idxs]
-        elif tag == 'I2I':
-            d['q'] = img_paths[q_idx]
-            d['r'] = [img_paths[i] for i in r_idxs]
-        elif tag == 'T2T':
-            d['q'] = captions[q_idx]
-            d['r'] = [captions[i] for i in r_idxs]
+            d['o'] = captions[q_idx]  # captions[q_idx*5]
+        else:
+            d['q'] = captions[q_idx]  # captions[q_idx*5]
+            d['o'] = img_paths[q_idx]
+        if tag.endswith('I'):
+            d['r'] = [img_paths[r_idx] for r_idx in r_idxs]
+        else:
+            d['r'] = [captions[r_idx] for r_idx in r_idxs]  # [captions[r_idx*5] for r_idx in r_idxs]
+
         return d
 
-    def plot_retrieval(d, tag, epoch, q_lab, r_labs, qI, rI):
+    def plot_retrieval(d, tag, file_tag, q_lab, r_labs, qI, rI):
 
         def set_spines_color_width(ax, color, width):
             plt.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
@@ -683,17 +683,28 @@ def retrieval2png(qB, rB, qL, rL, qI, rI, k=5, tag='', epoch=0):
 
         def get_q_rs():
             if tag == 'I2T':
-                return Image.open(d['q']), d['r']
+                return Image.open(d['q']), d['r'], d['o']
             elif tag == 'T2I':
-                return d['q'], [Image.open(i) for i in d['r']]
+                return d['q'], [Image.open(i) for i in d['r']], Image.open(d['o'])
             elif tag == 'I2I':
-                return Image.open(d['q']), [Image.open(i) for i in d['r']]
+                return Image.open(d['q']), [Image.open(i) for i in d['r']], d['o']
             elif tag == 'T2T':
-                return d['q'], d['r']
+                return d['q'], d['r'], Image.open(d['o'])
 
         colors = ['green' if q_lab == r_lab else 'red' for r_lab in r_labs]
 
-        q, rs = get_q_rs()
+        def print_results():
+            print()
+            print('Query:')
+            print(q_idx, d['q'], d['o'])
+            print()
+            print('Retrieval:')
+            for i, r in zip(r_idxs, d['r']):
+                print(i, r)
+
+        q, rs, o = get_q_rs()
+
+        print_results()
 
         # figure size
         if tag.endswith('I'):
@@ -709,10 +720,12 @@ def retrieval2png(qB, rB, qL, rL, qI, rI, k=5, tag='', epoch=0):
         if tag.startswith('I'):
             set_spines_color_width(ax, 'black', 3)
             plt.imshow(q)
+            ax.text(0, 250, o)
         else:
-            ax.axis([0, len(rs), 0, len(rs)])
+            #ax.axis([0, len(rs), 0, len(rs)])
             plt.axis('off')
-            ax.text(0, len(rs) // 2, '(idx:' + str(qI) + ') ' + q)
+            plt.imshow(o)
+            ax.text(0, 250, '(idx:' + str(qI) + ') ' + q)
 
         # plot responses
         if tag.endswith('I'):
@@ -728,15 +741,15 @@ def retrieval2png(qB, rB, qL, rL, qI, rI, k=5, tag='', epoch=0):
                 plt.axis('off')
                 ax.text(0, i, '(idx:' + str(rI[i]) + ') ' + r, color=colors[i])
 
-        plt.tight_layout()
-        plt.savefig(os.path.join('plots', ''.join([tag, epoch, '.png'])))
+        # plt.tight_layout()
+        plt.savefig(os.path.join('plots', ''.join([tag, file_tag, '.png'])))
 
     ham_dist_sorted_k, q_idx, r_idxs, q_lab, r_labs = get_retrieved_info(qB, rB, qL, rL, qI, rI, k)
     img_paths, captions = load_img_txt()
 
     d = get_retrieval_dict(img_paths, captions, q_idx, r_idxs, tag)
 
-    plot_retrieval(d, tag, epoch, q_lab, r_labs, q_idx, r_idxs)
+    plot_retrieval(d, tag, file_tag, q_lab, r_labs, q_idx, r_idxs)
 
     return d
 

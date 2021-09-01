@@ -308,6 +308,7 @@ class JointController:
         mapshr = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, [0, 1, 2, 3, 4, 5])
         p_at_k = self.calc_p_top_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT)
 
+
         if self.cfg.DRAW_PLOTS:
             self.visualize_retrieval(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, indexes, 'JDSH')
             top_k_hists(qu_BI, qu_BT, re_BI, re_BT, model='JDSH')
@@ -332,15 +333,16 @@ class JointController:
         # self.logger.info('Best MAP of I->T: %.3f, Best mAP of T->I: %.3f' % (self.best_it, self.best_ti))
         # self.logger.info('--------------------------------------------------------------------')
 
-    @staticmethod
-    def visualize_retrieval(qBX, qBY, rBX, rBY, qLX, qLY, rLX, rLY, indexes, epoch):
+    def visualize_retrieval(self, qBX, qBY, rBX, rBY, qLX, qLY, rLX, rLY, indexes, epoch):
 
         qIX, qIY, rIX, rIY = indexes
 
-        i2t = retrieval2png(qBX, rBY, qLX, rLY, qIX, rIY, tag='I2T', epoch=epoch)
-        t2i = retrieval2png(qBY, rBX, qLY, rLX, qIY, rIX, tag='T2I', epoch=epoch)
-        i2i = retrieval2png(qBX, rBX, qLX, rLX, qIX, rIX, tag='I2I', epoch=epoch)
-        t2t = retrieval2png(qBY, rBY, qLY, rLY, qIY, rIY, tag='T2T', epoch=epoch)
+        cfg_params = [self.cfg.SEED, self.cfg.dataset_json_file, self.cfg.dataset_image_folder_path]
+
+        i2t = retrieval2png(cfg_params, qBX, rBY, qLX, rLY, qIX, rIY, tag='I2T', file_tag=self.cfg.MODEL)
+        t2i = retrieval2png(cfg_params, qBY, rBX, qLY, rLX, qIY, rIX, tag='T2I', file_tag=self.cfg.MODEL)
+        i2i = retrieval2png(cfg_params, qBX, rBX, qLX, rLX, qIX, rIX, tag='I2I', file_tag=self.cfg.MODEL)
+        t2t = retrieval2png(cfg_params, qBY, rBY, qLY, rLY, qIY, rIY, tag='T2T', file_tag=self.cfg.MODEL)
 
     @staticmethod
     def get_each_5th_element(arr):
@@ -355,15 +357,32 @@ class JointController:
         self.ImgNet.eval().cuda()
         self.TxtNet.eval().cuda()
 
-        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT = generate_hashes_from_dataloader(self.database_loader,
-                                                                                   self.test_loader,
-                                                                                   self.ImgNet, self.TxtNet,
-                                                                                   self.cfg.LABEL_DIM)
+        re_BI, re_BT, re_LT, qu_BI, qu_BT, qu_LT, indexes = generate_hashes_from_dataloader(self.database_loader,
+                                                                                            self.test_loader,
+                                                                                            self.ImgNet, self.TxtNet,
+                                                                                            self.cfg.LABEL_DIM)
 
-        qu_BI = self.get_each_5th_element(qu_BI)
-        re_BI = self.get_each_5th_element(re_BI)
-        qu_LI = self.get_each_5th_element(qu_LT)
-        re_LI = self.get_each_5th_element(re_LT)
+        # qu_BI = self.get_each_5th_element(qu_BI)
+        # re_BI = self.get_each_5th_element(re_BI)
+        qu_LI = qu_LT  # self.get_each_5th_element(qu_LT)
+        re_LI = re_LT  # self.get_each_5th_element(re_LT)
+
+        # indexes = list(indexes)
+        # indexes[0] = self.get_each_5th_element(indexes[0])
+        # indexes[2] = self.get_each_5th_element(indexes[2])
+
+        MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI,
+                                                                       re_LT, self.cfg.MAP_K)
+
+        MAPS = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T)
+
+        maps5 = (MAP_I2T, MAP_T2I, MAP_I2I, MAP_T2T, MAP_AVG)
+        maps10 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 10)
+        maps20 = self.calc_maps_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, 20)
+        mapshr = self.calc_maps_rad(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, [0, 1, 2, 3, 4, 5])
+        p_at_k = self.calc_p_top_k(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT)
+
+        self.visualize_retrieval(qu_BI, qu_BT, re_BI, re_BT, qu_LI, qu_LT, re_LI, re_LT, indexes, 'JDSH')
 
         p_i2t, r_i2t = pr_curve(qu_BI, re_BT, qu_LI, re_LT, tqdm_label='I2T')
         p_t2i, r_t2i = pr_curve(qu_BT, re_BI, qu_LT, re_LI, tqdm_label='T2I')
