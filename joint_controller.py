@@ -68,8 +68,8 @@ class JointController:
             txt_feat_len = datasets.txt_feat_len
             img_feat_len = datasets.img_feat_len
 
-            self.ImgNet = ImgNetRS(self.cfg.HASH_BIT, img_feat_len, 512)
-            self.TxtNet = TxtNetRS(self.cfg.HASH_BIT, txt_feat_len, 512)
+            self.ImgNet = ImgNetRS(self.cfg.HASH_BIT, img_feat_len, self.cfg.HIDDEN)
+            self.TxtNet = TxtNetRS(self.cfg.HASH_BIT, txt_feat_len, self.cfg.HIDDEN)
         else:
             txt_feat_len = datasets.txt_feat_len
             self.ImgNet = ImgNet(code_len=self.cfg.HASH_BIT)

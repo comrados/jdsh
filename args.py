@@ -10,6 +10,7 @@ parser.add_argument('--model', default='JDSH', help='JDSH or DJSRH', type=str)
 parser.add_argument('--tag', default='img_aug_center_txt_bt_chain', help='model tag', type=str)
 parser.add_argument('--data-amount', default='normal', help="data amount: 'normal', 'double', 'aug'", type=str)
 parser.add_argument('--plots', default=False, help="build plots or not", action='store_true')
+parser.add_argument('--hidden-layer', default=4096, help="hidden layer size", type=int)
 
 args = parser.parse_args()
 
@@ -42,6 +43,7 @@ cfg = Config(cfg)
 
 # update settings
 cfg.TEST = args.test
+cfg.HIDDEN = args.hidden_layer
 cfg.DATASET = args.dataset.upper()
 cfg.CHECKPOINT = args.checkpoint
 cfg.HASH_BIT = args.bit
