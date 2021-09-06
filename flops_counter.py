@@ -106,46 +106,12 @@ class TxtNetRS(nn.Module):
         return code
 
 
-class JointModel(nn.Module):
-    def __init__(self):
-        super(JointModel, self).__init__()
-        pass
-
-    def forward(self, _):
-
-        fi = torch.randn((128, 512))
-        ft = torch.randn((128, 768))
-
-        S = self.cal_similarity_matrix_djsrh(fi, ft)
-
-        return S
-
-    def cal_similarity_matrix_djsrh(self, F_I, txt):
-
-        F_I = F.normalize(F_I)
-        S_I = F_I.mm(F_I.t())
-        S_I = S_I * 2 - 1
-
-        F_T = F.normalize(txt)
-        S_T = F_T.mm(F_T.t())
-        S_T = S_T * 2 - 1
-
-        S_tilde = 0.6 * S_I + (1 - 0.6) * S_T
-        S = (1 - 0.6) * S_tilde + 0.6 * S_tilde.mm(S_tilde.t()) / 128
-        S = S * 0.6
-
-        return S
-
-
-mi = ImgNetRS(cfg.HASH_BIT, 512, 512)
-mt = TxtNetRS(cfg.HASH_BIT, 768, 512)
-mj = JointModel()
+mi = ImgNetRS(cfg.HASH_BIT, 512, 4096)
+mt = TxtNetRS(cfg.HASH_BIT, 768, 4096)
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
 
 model = mi
-
-res = count_thop2(mj, (512,), 'joint')
 
 
 def calculate_stats_for_unhd(method='ptflops'):
@@ -164,6 +130,7 @@ def calculate_stats_for_unhd(method='ptflops'):
 
     print('\nTotal stats:')
     print('{:<40}  {:<8}'.format('Computational complexity (MACs):', total_macs))
+    print('{:<40}  {:<8}'.format('Computational complexity (FLOPs):', total_macs * 2))
     print('{:<40}  {:<8}'.format('Number of parameters:', total_params))
 
 

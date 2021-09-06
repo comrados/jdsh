@@ -1,7 +1,7 @@
 {
-  "alpha": 0.4,
-  "beta": 0.3,
-  "lamb": 0.3,
+  "alpha": 0.2,
+  "beta": 0.4,
+  "lamb": 0.4,
   "mu": 1.5,
   "INTRA": 0.1,
   "LR_IMG": 0.01,
